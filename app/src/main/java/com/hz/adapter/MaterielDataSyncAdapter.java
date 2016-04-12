@@ -30,8 +30,6 @@ public class MaterielDataSyncAdapter extends RecyclerView.Adapter<MaterielDataSy
     private MaterielDataSyncFragment mTargetFragment;
 
     public MaterielDataSyncAdapter(MaterielDataSyncFragment mTargetFragment, List<MaterielDataSyncEntity> materielListEntities) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
-
         this.mMaterielDataSyncEntities = materielListEntities;
         this.mTargetFragment = mTargetFragment;
         BaseActivity mTargetActivity = (BaseActivity) mTargetFragment.getActivity();

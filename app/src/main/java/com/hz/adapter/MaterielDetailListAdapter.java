@@ -56,6 +56,7 @@ public class MaterielDetailListAdapter extends BaseAdapter {
         }
 
         viewHolder.materielName.setText(item.getMaterielName());
+        Log.d("INEEDTHIS", item.getMaterielName());
         return convertView;
     }
 

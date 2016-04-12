@@ -25,23 +25,28 @@ import java.util.List;
  * 在dialog中选择listview数据
  */
 public class PickerListViewDialog extends AppCompatDialog implements View.OnClickListener, PickerListViewAdapter.onPickerListSelectListener, View.OnTouchListener, ClearAbleEditText.OnTextChangeListener {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = PickerListViewDialog.class.getSimpleName();
     public static final int PICKER_OK_ID = R.id.id_picker_ok;//确定按钮ID
     public static final int PICKER_CANCEL_ID = R.id.id_picker_cancel;//取消按钮ID
     public static final String PICKER_ITEM_DEFAULT_KEY = "-1";
+
     private List<PickerItem> pickerDatas = new ArrayList<>();//pickerView数据源
     private List<PickerItem> pickerDatasOragin = new ArrayList<>();//保存pickerView原始数据源
     private PickerItem currentSelectItem;//保存当前选中的数据
-    private EditText bindEditText;//pickerDialog绑定EditText
-    private onPickerDialogHasFocusListener pickerDialogHasFocusListener;//当EditText获取焦点后触发事件
-    private ListView mPickerListview;
-    private ClearAbleEditText mClearEdittext;//可以清空输入输入框
     private PickerListViewAdapter mPickerListViewAdapter;
+
+    private EditText bindEditText;//pickerDialog绑定EditText
+    private ClearAbleEditText mClearEdittext;//可以清空输入输入框
+    private ListView mPickerListview;
+
+    private onPickerDialogHasFocusListener pickerDialogHasFocusListener;//当EditText获取焦点后触发事件
 
     public PickerListViewDialog(Context context) {
         super(context);
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,36 +54,6 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
         initComponent();
         this.setTitle(R.string.title_dialog_picker);
     }
-
-    /**
-     * 初始化pickerView组件
-     * *
-     */
-    private void initComponent() {
-        int width = DeviceUtils.getScreenWidth(getContext()); // 屏幕宽度（像素）
-        int height = DeviceUtils.getScreenHeight(getContext());
-        int size = Math.min(width, height);
-
-        View containerView = findViewById(R.id.id_dialog_picker_container);
-        ViewGroup.LayoutParams layoutParams = containerView.getLayoutParams();
-        layoutParams.width = (int) (size * 0.7);
-        layoutParams.height = (width > height) ? (int) (size * 0.6) : (int) (size * 0.9);
-        containerView.setLayoutParams(layoutParams);
-
-        this.setCanceledOnTouchOutside(true);
-        this.setCancelable(true);
-        getWindow().setWindowAnimations(R.style.picker_listview_dialog_topin_topout_animation);
-
-        mPickerListview = (ListView) findViewById(R.id.id_pickerlistview);
-        Button mPickerOk = (Button) findViewById(R.id.id_picker_ok);
-        mPickerOk.setOnClickListener(this);
-        Button mPickerCancel = (Button) findViewById(R.id.id_picker_cancel);
-        mPickerCancel.setOnClickListener(this);
-
-        mClearEdittext = (ClearAbleEditText) findViewById(R.id.id_clearableedittext_dialog_listview);
-        mClearEdittext.setOnTextChangeListener(this);
-    }
-
     @Override
     public void show() {
         super.show();
@@ -118,8 +93,6 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
             mClearEdittext.setText("");
         }
     }
-
-
     @Override
     public void onTextChange(String newText) {
         Log.d(TAG, newText);
@@ -140,20 +113,6 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
         }
         mPickerListViewAdapter.notifyDataSetChanged();
     }
-
-
-    /**
-     * 设置picker的数据源
-     * *
-     */
-    public PickerListViewDialog setPickerDialogDatas(List<PickerItem> datas) {
-        pickerDatas.clear();
-        pickerDatas.addAll(datas);
-        pickerDatasOragin.clear();
-        pickerDatasOragin.addAll(datas);
-        return this;
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -176,8 +135,6 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
         pickerDialogHasFocusListener.pickerDialogHasNotFocus(this);
         this.dismiss();
     }
-
-
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -190,48 +147,76 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
         }
         return false;
     }
-
-    private boolean checkCurrentSelectItemIsDefault() {
-        return currentSelectItem != null && currentSelectItem.key.equalsIgnoreCase(PICKER_ITEM_DEFAULT_KEY);
-    }
-
-
     @Override
     public void onPickerListSelect(PickerItem pickerItem) {
         Log.d(TAG, "onPickerListSelect------>" + pickerItem.toString());
         currentSelectItem = pickerItem;
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 初始化pickerView组件
+     */
+    private void initComponent() {
+        int width = DeviceUtils.getScreenWidth(getContext()); // 屏幕宽度（像素）
+        int height = DeviceUtils.getScreenHeight(getContext());
+        int size = Math.min(width, height);
 
+        View containerView = findViewById(R.id.id_dialog_picker_container);
+        ViewGroup.LayoutParams layoutParams = containerView.getLayoutParams();
+        layoutParams.width = (int) (size * 0.7);
+        layoutParams.height = (width > height) ? (int) (size * 0.6) : (int) (size * 0.9);
+        containerView.setLayoutParams(layoutParams);
+
+        this.setCanceledOnTouchOutside(true);
+        this.setCancelable(true);
+        getWindow().setWindowAnimations(R.style.picker_listview_dialog_topin_topout_animation);
+
+        mPickerListview = (ListView) findViewById(R.id.id_pickerlistview);
+        Button mPickerOk = (Button) findViewById(R.id.id_picker_ok);
+        mPickerOk.setOnClickListener(this);
+        Button mPickerCancel = (Button) findViewById(R.id.id_picker_cancel);
+        mPickerCancel.setOnClickListener(this);
+
+        mClearEdittext = (ClearAbleEditText) findViewById(R.id.id_clearableedittext_dialog_listview);
+        mClearEdittext.setOnTextChangeListener(this);
+    }
+    /**
+     * 设置picker的数据源
+     */
+    public PickerListViewDialog setPickerDialogDatas(List<PickerItem> datas) {
+        pickerDatas.clear();
+        pickerDatas.addAll(datas);
+        pickerDatasOragin.clear();
+        pickerDatasOragin.addAll(datas);
+        return this;
+    }
+
+    private boolean checkCurrentSelectItemIsDefault() {
+        return currentSelectItem != null && currentSelectItem.key.equalsIgnoreCase(PICKER_ITEM_DEFAULT_KEY);
+    }
     /**
      * 获取pickerDialo绑定的EditText的Id
-     * *
      */
     public int getPickerDialogBindEditTextId() {
         return this.bindEditText.getId();
     }
-
     /**
      * 获取pickerDialo绑定的EditText
-     * *
      */
     public EditText getPickerDialogBindEditText() {
         return this.bindEditText;
     }
-
     /**
      * 设置picker绑定的EditText
-     * *
      */
     public PickerListViewDialog setPickerDialogBindEditText(EditText bildEditText) {
         this.bindEditText = bildEditText;
         bindEditText.setOnTouchListener(this);
         return this;
     }
-
     /**
      * 获取pickerDialo绑定的EditText的tag值
-     * *
      */
     public String getPickerDialogBindEditTextTagValue() {
         Object tag = this.bindEditText.getTag();
@@ -241,17 +226,13 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
             return null;
         }
     }
-
     /**
      * 为pickerView设置获取焦点监听器
-     * *
      */
     public PickerListViewDialog setOnPickerDialogHasFocusListener(onPickerDialogHasFocusListener onPickerDialogHasFocusListener) {
         this.pickerDialogHasFocusListener = onPickerDialogHasFocusListener;
         return this;
     }
-
-
     /**
      * pickerDialog获取输入焦点触发事件*
      */
@@ -260,6 +241,5 @@ public class PickerListViewDialog extends AppCompatDialog implements View.OnClic
 
         void pickerDialogHasNotFocus(PickerListViewDialog pickerScrollViewDialog);
     }
-
 
 }

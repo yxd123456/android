@@ -33,8 +33,6 @@ public class ProjectGalleryPreviewAdapter extends RecyclerView.Adapter<ProjectGa
     private int cellWidth;
 
     public ProjectGalleryPreviewAdapter(ProjectDataPreviewActivity projectMapDataPreviewActivity, List<PointGalleryEntity> mGalleryEntityList, int cellWidth) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
-
         this.projectMapDataPreviewActivity = projectMapDataPreviewActivity;
         this.mInflater = LayoutInflater.from(projectMapDataPreviewActivity);
         this.mGalleryEntityList = mGalleryEntityList;

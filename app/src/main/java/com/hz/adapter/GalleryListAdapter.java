@@ -31,9 +31,7 @@ public class GalleryListAdapter extends RecyclerView.Adapter<GalleryListAdapter.
     private int cellWidth;
     private GalleryPopupWindow mGalleryPopupWindow;
 
-
-    public GalleryListAdapter(GalleryPopupWindow galleryPopupWindow, Context context, List<GalleryListItemEntity> mGalleryEntityList, int cellWidth) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
+    public GalleryListAdapter(GalleryPopupWindow galleryPopupWindow, Context context, List<GalleryListItemEntity> mGalleryEntityList, int cellWidth){
         this.mContext = context;
         this.mInflater = LayoutInflater.from(context);
         this.mGalleryPopupWindow = galleryPopupWindow;
@@ -57,7 +55,6 @@ public class GalleryListAdapter extends RecyclerView.Adapter<GalleryListAdapter.
 
         return galleryViewHolder;
     }
-
 
     // 将数据绑定至ViewHolder
     @Override
@@ -88,7 +85,6 @@ public class GalleryListAdapter extends RecyclerView.Adapter<GalleryListAdapter.
         });
         holder.mCheckBox.setChecked(entity.checked);
     }
-
 
     //获取总的条目数
     @Override

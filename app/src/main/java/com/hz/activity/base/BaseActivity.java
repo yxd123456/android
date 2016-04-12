@@ -20,13 +20,12 @@ import com.umeng.analytics.MobclickAgent;
  * activity 基类
  */
 public class BaseActivity extends AppCompatActivity {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = BaseActivity.class.getSimpleName();
-
-    //设置是否使用导航栏透明显示   设置此属性必须在super.onCreate()方法之前
-    public boolean useTranslucentStatusAndNavigation = false;
-    //全局工具条
+    public boolean useTranslucentStatusAndNavigation = false;//设置是否使用导航栏透明显示,设置此属性必须在super.onCreate()方法之前
     private Toolbar mMDToolBar;//Material Design 全局工具条
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,12 +33,10 @@ public class BaseActivity extends AppCompatActivity {
         if (useTranslucentStatusAndNavigation) {
             WindowsUtil.setTranslucentStatusAndNavigation(this);
         }
-
         if (PackageUtil.isDebugEnable(this)) {
             ViewServer.get(this).addWindow(this);
         }
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -50,14 +47,28 @@ public class BaseActivity extends AppCompatActivity {
             ViewServer.get(this).setFocusedWindow(this);
         }
     }
-
     @Override
     protected void onPause() {
         super.onPause();
         MobclickAgent.onPageEnd(this.getClass().getSimpleName());
         MobclickAgent.onPause(this);
     }
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (PackageUtil.isDebugEnable(this)) {
+            ViewServer.get(this).removeWindow(this);
+        }
+        System.gc();
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item != null && item.getItemId() == android.R.id.home) {
+            onLeftIconClick();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
      * 将object转换为string
      * *
@@ -65,26 +76,21 @@ public class BaseActivity extends AppCompatActivity {
     public String getString(Object obj) {
         return (obj == null) ? null : obj.toString();
     }
-
     /**
      * 获取全局DaoSession对象*
      */
     public DaoSession getDaoSession() {
         return this.getMainApplication().getDaoSession();
     }
-
     /**
      * 获取全局mainApplicatin对象*
      */
     public MainApplication getMainApplication() {
         return (MainApplication) this.getApplication();
     }
-
-
     public void onLeftIconClick() {
         this.finish();
     }
-
     /**
      * 获取系统工具条
      * *
@@ -92,7 +98,6 @@ public class BaseActivity extends AppCompatActivity {
     public Toolbar getMDToolBar() {
         return mMDToolBar;
     }
-
     /***
      * 设置系统工具条
      **/
@@ -102,8 +107,6 @@ public class BaseActivity extends AppCompatActivity {
         this.mMDToolBar = mHomeToolBar;
         return mHomeToolBar;
     }
-
-
     /**
      * 设置显示返回按钮
      **/
@@ -115,7 +118,6 @@ public class BaseActivity extends AppCompatActivity {
         }
         return mMDToolBar;
     }
-
     /**
      * 设置系统工具条标题
      * *
@@ -124,7 +126,6 @@ public class BaseActivity extends AppCompatActivity {
         setMDToolBarTitle(getResources().getString(resId));
         return mMDToolBar;
     }
-
     /**
      * 设置系统工具条标题
      * *
@@ -135,23 +136,5 @@ public class BaseActivity extends AppCompatActivity {
             ab.setTitle(title);
         }
         return mMDToolBar;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item != null && item.getItemId() == android.R.id.home) {
-            onLeftIconClick();
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (PackageUtil.isDebugEnable(this)) {
-            ViewServer.get(this).removeWindow(this);
-        }
-        System.gc();
     }
 }

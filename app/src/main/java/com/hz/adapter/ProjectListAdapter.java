@@ -39,8 +39,6 @@ public class ProjectListAdapter extends RecyclerView.Adapter<ProjectListAdapter.
     private WeakReference<BaseActivity> baseActivityWeakReference;
 
     public ProjectListAdapter(ProjectListFragment projectListFragment, List<ProjectEntity> projectListEntityList) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
-
         this.baseActivityWeakReference = new WeakReference<>((BaseActivity) projectListFragment.getActivity());
         this.projectListEntityList = projectListEntityList;
         this.layoutInflater = LayoutInflater.from(projectListFragment.getActivity());

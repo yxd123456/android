@@ -16,20 +16,20 @@ import com.nostra13.universalimageloader.core.ImageLoader;
  * 图像预览组件
  */
 public class ImagePreviewActivity extends BaseActivity {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = ImagePreviewActivity.class.getSimpleName();
     /**
      * 图片地址*
-     *
      * @see com.hz.common.Constans.ImageFrom
      */
     public static final String IMAGE_ADDRESS = "IMAGE_ADDRESS";
     /**
      * 图片的来源
-     *
      * @see com.hz.common.Constans.ImageFrom
      */
     public static final String IMAGE_FROM = "IMAGE_FROM";
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle arg0) {
         super.onCreate(arg0);
@@ -37,6 +37,13 @@ public class ImagePreviewActivity extends BaseActivity {
         initComponents();
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        ActivityCompat.finishAfterTransition(this);
+    }
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     private void initComponents() {
         setMdToolBar(R.id.id_material_toolbar);
         setMDToolBarBackEnable(true);
@@ -64,9 +71,5 @@ public class ImagePreviewActivity extends BaseActivity {
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        ActivityCompat.finishAfterTransition(this);
-    }
+
 }

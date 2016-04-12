@@ -40,26 +40,38 @@ import java.util.List;
  * 启动模式SingleTask
  */
 public class ProjectDataPreviewActivity extends BaseActivity {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = ProjectDataPreviewActivity.class.getSimpleName();
+    public static final String KEY_UPLOAD_PROJECTDATA_ENTITY = "KEY_UPLOAD_PROJECTDATA_ENTITY";//上传项目数据key
+
+    private TextView mTextViewPointNum, mTextViewLineNum;
+
     public ProjectEntity mProjectEntity;//从项目列表传入项目数据
     public ProjectGalleryPreviewAdapter projectGalleryPreviewAdapter;
-    private List<PointGalleryEntity> mGalleryEntityList = new ArrayList<>();
-    private TextView mTextViewPointNum, mTextViewLineNum;
-    public static final String KEY_UPLOAD_PROJECTDATA_ENTITY = "KEY_UPLOAD_PROJECTDATA_ENTITY";//上传项目数据key
     public Handler mUiHandler = new Handler();//操作uihandler
+    private List<PointGalleryEntity> mGalleryEntityList = new ArrayList<>();
 
-    @Override
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    @Override//初始化
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_projectmapdata_preview_layout);
         initComponents();
     }
+    @Override//绑定项目上传服务
+    protected void onResume() {
+        super.onResume();
 
-    private void initComponents() {
-        initView();
-        initData();
+        Intent projectDataUploadService = new Intent(this, ProjectMapDataUploadService.class);
+        this.bindService(projectDataUploadService, projectDataUpLoadConnection, BIND_ADJUST_WITH_ACTIVITY);
     }
+    @Override//绑定service获取上传进度
+    protected void onDestroy() {
+        super.onDestroy();
 
+        unbindService(projectDataUpLoadConnection);
+        mUiHandler.removeCallbacksAndMessages(null);
+    }
     @Override
     protected void onNewIntent(Intent intent) {
         ProjectEntity newEntity = (ProjectEntity) intent.getSerializableExtra(ProjectListFragment.PROJECT_OBJ_KEY);
@@ -68,7 +80,137 @@ public class ProjectDataPreviewActivity extends BaseActivity {
             initData();
         }
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_project_mapdata_preview, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_item_upload_mappreviewdata) {
+            checkUserPremise();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 检查用户确认是否需要上传
+     * 是则触发checkWorkStatus()
+     **/
+    public void checkUserPremise() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("确定要上传采集信息到服务器吗!");
+        builder.setTitle("提示");
+        builder.setIcon(R.drawable.ic_cloud_black_48dp);
+        builder.setPositiveButton("确认",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        checkWorkStatus();
+                    }
+                });
+
+        builder.setNegativeButton("取消",
+                new android.content.DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        builder.create().show();
+    }
+    /**
+     * 检查当前的网络和用户登录状态
+     * 当状态都正常则触发startUploadService()
+     **/
+    private void checkWorkStatus() {
+        //检测网络状态
+        if (!NetworkManager.isConnectAvailable(this)) {
+            PopupToast.showError(this, "当前网络不可用,请检查网络状态后继续");
+            return;
+        }
+        //检测用户登录状态
+        HttpManager.getInstance().isRemberMeExpiredASync(new HttpManager.SessionCheckCallBack() {
+            @Override
+            public void sessionExpired(boolean isExpired) {
+                if (!isExpired) {
+                    startUploadService();
+                } else {
+                    mUiHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            PopupToast.showError(ProjectDataPreviewActivity.this, "用户登录失效,请重新登陆");
+                        }
+                    });
+                    CommonHelper.toLoginActivity(ProjectDataPreviewActivity.this);
+                }
+            }
+        });
+    }
+    /**
+     * 上传采集数据
+     * 启动和绑定服务后触发ServiceConnection的重写方法
+     **/
+    private void startUploadService() {
+        //启动项目采集数据上传服务
+        Intent projectDataUploadService = new Intent(ProjectDataPreviewActivity.this, ProjectMapDataUploadService.class);
+        projectDataUploadService.putExtra(KEY_UPLOAD_PROJECTDATA_ENTITY, mProjectEntity);
+        startService(projectDataUploadService);
+        //绑定项目上传服务
+        this.bindService(projectDataUploadService, projectDataUpLoadConnection, BIND_ADJUST_WITH_ACTIVITY);
+    }
+    /**
+     * 项目采集数据上传服务连接
+     **/
+    private ServiceConnection projectDataUpLoadConnection = new ServiceConnection() {
+
+        //图库图片上传监听
+        ProjectMapDataUploadService.OnGalleryImageUploadListener onGalleryImageUploadListener = new ProjectMapDataUploadService.OnGalleryImageUploadListener() {
+            @Override
+            public void onProgress(String imgId, int uploadProgress) {
+                for (int i = 0; i < mGalleryEntityList.size(); i++) {
+                    PointGalleryEntity galleryEntity = mGalleryEntityList.get(i);
+                    if (TextUtils.equals(galleryEntity.getImgId(), imgId)) {
+                        galleryEntity.setImgUploadProgress(uploadProgress);
+                        final int position = i;
+                        mUiHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                projectGalleryPreviewAdapter.notifyItemChanged(position);
+                            }
+                        });
+                        break;
+                    }
+                }
+            }
+            @Override
+            public void onDone(String imgId) {
+            }
+        };
+
+        ProjectMapDataUploadService bindService;
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ProjectMapDataUploadService.ProjectCollectDataUploadBinder binder = (ProjectMapDataUploadService.ProjectCollectDataUploadBinder) service;
+            bindService = binder.getTaggetService();
+            bindService.setOnGalleryImageUploadListener(onGalleryImageUploadListener);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            if (bindService != null) {
+                bindService.setOnGalleryImageUploadListener(null);
+            }
+        }
+    };
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    private void initComponents() {
+        initView();
+        initData();
+    }
     private void initData() {
         mProjectEntity = (ProjectEntity) this.getIntent().getSerializableExtra(ProjectListFragment.PROJECT_OBJ_KEY);
         if (mProjectEntity == null) {
@@ -87,7 +229,6 @@ public class ProjectDataPreviewActivity extends BaseActivity {
         mTextViewPointNum.setText(pointNum + "个");
         mTextViewLineNum.setText(lineNum + "条");*/
     }
-
     private void initView() {
         setMdToolBar(R.id.id_material_toolbar);
         setMDToolBarBackEnable(true);
@@ -116,151 +257,6 @@ public class ProjectDataPreviewActivity extends BaseActivity {
         mProjectGalleryRecyclerView.setItemAnimator(new DefaultItemAnimator());
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_project_mapdata_preview, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.menu_item_upload_mappreviewdata) {
-            checkUserPremise();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    /**
-     * 检查用户确认是否需要上传
-     **/
-    public void checkUserPremise() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("确定要上传采集信息到服务器吗!");
-        builder.setTitle("提示");
-        builder.setIcon(R.drawable.ic_cloud_black_48dp);
-        builder.setPositiveButton("确认",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        checkWorkStatus();
-                    }
-                });
-
-        builder.setNegativeButton("取消",
-                new android.content.DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-
-        builder.create().show();
-    }
-
-    /**
-     * 检查当前的网络和用户登录状态
-     **/
-    private void checkWorkStatus() {
-        //检测网络状态
-        if (!NetworkManager.isConnectAvailable(this)) {
-            PopupToast.showError(this, "当前网络不可用,请检查网络状态后继续");
-            return;
-        }
-
-        //检测用户登录状态
-        HttpManager.getInstance().isRemberMeExpiredASync(new HttpManager.SessionCheckCallBack() {
-            @Override
-            public void sessionExpired(boolean isExpired) {
-                if (!isExpired) {
-                    startUploadService();
-                } else {
-                    mUiHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            PopupToast.showError(ProjectDataPreviewActivity.this, "用户登录失效,请重新登陆");
-                        }
-                    });
-                    CommonHelper.toLoginActivity(ProjectDataPreviewActivity.this);
-                }
-            }
-        });
-    }
-
-    /**
-     * 上传采集数据
-     **/
-    private void startUploadService() {
-        //启动项目采集数据上传服务
-        Intent projectDataUploadService = new Intent(ProjectDataPreviewActivity.this, ProjectMapDataUploadService.class);
-        projectDataUploadService.putExtra(KEY_UPLOAD_PROJECTDATA_ENTITY, mProjectEntity);
-        startService(projectDataUploadService);
-
-        //绑定项目上传服务
-        this.bindService(projectDataUploadService, projectDataUpLoadConnection, BIND_ADJUST_WITH_ACTIVITY);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //绑定项目上传服务
-        Intent projectDataUploadService = new Intent(this, ProjectMapDataUploadService.class);
-        this.bindService(projectDataUploadService, projectDataUpLoadConnection, BIND_ADJUST_WITH_ACTIVITY);
-    }
-
-    /**
-     * 项目采集数据上传服务连接
-     **/
-    private ServiceConnection projectDataUpLoadConnection = new ServiceConnection() {
-
-        //图库图片上传监听
-        ProjectMapDataUploadService.OnGalleryImageUploadListener onGalleryImageUploadListener = new ProjectMapDataUploadService.OnGalleryImageUploadListener() {
-            @Override
-            public void onProgress(String imgId, int uploadProgress) {
-                for (int i = 0; i < mGalleryEntityList.size(); i++) {
-                    PointGalleryEntity galleryEntity = mGalleryEntityList.get(i);
-                    if (TextUtils.equals(galleryEntity.getImgId(), imgId)) {
-                        galleryEntity.setImgUploadProgress(uploadProgress);
-                        final int position = i;
-                        mUiHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                projectGalleryPreviewAdapter.notifyItemChanged(position);
-                            }
-                        });
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void onDone(String imgId) {
-            }
-        };
-
-        ProjectMapDataUploadService bindService;
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            ProjectMapDataUploadService.ProjectCollectDataUploadBinder binder = (ProjectMapDataUploadService.ProjectCollectDataUploadBinder) service;
-            bindService = binder.getTaggetService();
-            bindService.setOnGalleryImageUploadListener(onGalleryImageUploadListener);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            if (bindService != null) {
-                bindService.setOnGalleryImageUploadListener(null);
-            }
-        }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //绑定service获取上传进度
-        unbindService(projectDataUpLoadConnection);
-        mUiHandler.removeCallbacksAndMessages(null);
-    }
 }
 
 

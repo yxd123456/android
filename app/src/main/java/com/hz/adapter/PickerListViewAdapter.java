@@ -27,8 +27,6 @@ public class PickerListViewAdapter extends BaseAdapter {
     private onPickerListSelectListener onPickerListSelectListener;
 
     public PickerListViewAdapter(List<PickerItem> pickerDatas, Context context, onPickerListSelectListener pickerListSelectListener) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
-
         this.pickerDatas = pickerDatas;
         this.layoutInflater = LayoutInflater.from(context);
         this.context = context;

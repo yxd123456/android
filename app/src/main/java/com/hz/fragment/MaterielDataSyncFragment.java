@@ -36,6 +36,7 @@ import de.greenrobot.dao.AbstractDao;
  * 材料数据同步fragment
  */
 public class MaterielDataSyncFragment extends BaseFragment {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = MaterielDataSyncFragment.class.getSimpleName();
     private static ProgressHUD mProgressHUD = null;
     private BaseActivity baseActivity;
@@ -43,6 +44,7 @@ public class MaterielDataSyncFragment extends BaseFragment {
     private MaterielDataSyncAdapter materielDataSyncAdapter = null;
     private MaterielDataSyncHelper materielDataSyncHelper = new MaterielDataSyncHelper();
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         baseActivity = (BaseActivity) this.getActivity();
@@ -51,36 +53,9 @@ public class MaterielDataSyncFragment extends BaseFragment {
         return rootView;
     }
 
-    /**
-     * 初始化视图组件
-     *
-     * @param rootView 视图根节点
-     *                 *
-     */
-    private void initViews(View rootView) {
-        RecyclerView mMaterielList = (RecyclerView) rootView.findViewById(R.id.id_listview_materials_list);
-        materielDataSyncAdapter = new MaterielDataSyncAdapter(this, mMaterielListEntityList);
-        mMaterielList.setAdapter(materielDataSyncAdapter);
-
-        //设置布局管理器
-        GridLayoutManager layoutManager = new GridLayoutManager(baseActivity, 1);
-        mMaterielList.setLayoutManager(layoutManager);
-        mMaterielList.setItemAnimator(new DefaultItemAnimator());
-
-        //分割线
-        mMaterielList.addItemDecoration(
-                new HorizontalDividerItemDecoration.Builder(this.getActivity())
-                        .colorResId(R.color.view_seperator_color)
-                        .size(DensityUtil.dip2px(this.getActivity(), 1))
-                        .build()
-        );
-
-        reInitMaterielDatas();
-    }
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
      * 初始化材料同步列表
-     * *
      */
     private void reInitMaterielDatas() {
         List<MaterielDataSyncEntity> materielSettingEntityList = materielDataSyncHelper.getAllMateriel(baseActivity);
@@ -94,10 +69,8 @@ public class MaterielDataSyncFragment extends BaseFragment {
         mMaterielListEntityList.addAll(materielSettingEntityList);
         materielDataSyncAdapter.notifyDataSetChanged();
     }
-
     /**
      * 同步材料数据实现
-     * *
      */
     public void syncMaterielDatas(final MaterielDataSyncEntity item, final int position) {
         mProgressHUD = ProgressHUD.show(this.getActivity(), "获取服务器最新数据中");
@@ -130,13 +103,8 @@ public class MaterielDataSyncFragment extends BaseFragment {
             }
         });
     }
-
-
-
-
     /**
      * 根据材料的ID获取总数
-     *
      * @param materielId 材料ID
      */
     public int getTowerTypeCountByMaterielId(String materielId) {
@@ -148,10 +116,8 @@ public class MaterielDataSyncFragment extends BaseFragment {
         Log.d(TAG, "materielId:" + materielId + ",count:" + count);
         return (int) count;
     }
-
     /**
      * 查看材料详细信息页面
-     *
      * @param item 材料实体
      */
     public void startDetailActivity(MaterielDataSyncEntity item) {
@@ -163,4 +129,31 @@ public class MaterielDataSyncFragment extends BaseFragment {
         materielDetail.putExtras(bundle);
         this.startActivity(materielDetail);
     }
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 初始化视图组件
+     * @param rootView 视图根节点
+     */
+    private void initViews(View rootView) {
+        RecyclerView mMaterielList = (RecyclerView) rootView.findViewById(R.id.id_listview_materials_list);
+        materielDataSyncAdapter = new MaterielDataSyncAdapter(this, mMaterielListEntityList);
+        mMaterielList.setAdapter(materielDataSyncAdapter);
+
+        //设置布局管理器
+        GridLayoutManager layoutManager = new GridLayoutManager(baseActivity, 1);
+        mMaterielList.setLayoutManager(layoutManager);
+        mMaterielList.setItemAnimator(new DefaultItemAnimator());
+
+        //分割线
+        mMaterielList.addItemDecoration(
+                new HorizontalDividerItemDecoration.Builder(this.getActivity())
+                        .colorResId(R.color.view_seperator_color)
+                        .size(DensityUtil.dip2px(this.getActivity(), 1))
+                        .build()
+        );
+
+        reInitMaterielDatas();
+    }
+
 }

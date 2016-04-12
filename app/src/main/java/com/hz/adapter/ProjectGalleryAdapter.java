@@ -29,8 +29,6 @@ public class ProjectGalleryAdapter extends RecyclerView.Adapter<ProjectGalleryAd
     private WeakReference<BaseAttributeActivity> activityWeakReference;
 
     public ProjectGalleryAdapter(BaseAttributeActivity pointAttributeActivity, List<PointGalleryEntity> mGalleryEntityList) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
-
         activityWeakReference = new WeakReference<>(pointAttributeActivity);
         this.mInflater = LayoutInflater.from(pointAttributeActivity);
         this.mGalleryEntityList = mGalleryEntityList;

@@ -46,10 +46,9 @@ import cn.jpush.android.api.JPushInterface;
  * MaterialDesign风格的首页
  */
 public class MaterialHomeActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
-    public static final String TAG = MaterialHomeActivity.class.getSimpleName();
-    //滑动菜单布局
-    private DrawerLayout mDrawerLayout;
+    //变量常量+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     private ActionBarDrawerToggleCompat mDrawerToggle;
+    private DrawerLayout mDrawerLayout;//滑动菜单布局
     private MenuItem mPreMenuItem;
     private CollapsingToolbarLayout mCollapsingToolbarLayout;
     private AppCompatImageView mToolBarImageView;
@@ -57,7 +56,9 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
     private Fragment currentFragment;
     private ProgressHUD mCheckLoginProgress = null;//检查登陆状态进度
     private Handler handler = new Handler();
+    public static final String TAG = MaterialHomeActivity.class.getSimpleName();
 
+    //生命周期+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,70 +67,57 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
         addDefaultFragment();
         checkLogin();
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        JPushInterface.onResume(this);
 
+    }
+    @Override
+    protected void onPause() {
+        JPushInterface.onPause(this);
+        super.onPause();
+    }
+
+    //重写方法+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    @Override
+    public void onBackPressed() {
+        if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
+            mDrawerLayout.closeDrawer(Gravity.LEFT);
+            return;
+        }
+        showBackPressedAlert();
+    }
+    @Override
+    public void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_home, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        switch (item.getItemId()) {
+            case R.id.menu_item_about:
+                showAbout();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     /**
-     * 添加系统默认的Fragment
-     **/
-    private void addDefaultFragment() {
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.add(R.id.id_fragment_home_content, currentFragment = new ProjectListFragment());
-        transaction.commit();
-    }
-
-    //设置导航菜单相关属性
-    private void setUpDrawerLayout() {
-        //滑动菜单总布局
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.id_materialhome_drawer_layout);
-
-        //菜单按钮
-        mDrawerToggle = new ActionBarDrawerToggleCompat(this, mDrawerLayout, R.string.string_home_title, R.string.string_home_materiel_sync);
-        mDrawerToggle.setSimpleDrawerListener(new DrawerLayout.SimpleDrawerListener() {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                String userName = SharedPreferencesHelper.getUserRealName(MaterialHomeActivity.this);
-
-                TextView mUserNameTextView = (TextView) drawerView.findViewById(R.id.id_home_username);
-                mUserNameTextView.setText(userName);
-
-                RoundImageView roundImageView = (RoundImageView) drawerView.findViewById(R.id.id_user_image);
-                ViewGroup.LayoutParams layoutParams = roundImageView.getLayoutParams();
-                roundImageView.setImageDrawable(new UserNameDrawable(userName, layoutParams.width, layoutParams.height, getResources().getDimension(R.dimen.user_image_text_size)));
-            }
-        });
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-
-
-        //导航栏
-        NavigationView mNavigationView = (NavigationView) findViewById(R.id.id_materialhome_nv_menu);
-        mNavigationView.setNavigationItemSelectedListener(this);
-
-        //可折叠ToolBar
-        mCollapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.id_home_collapsingtoolbarlayout);
-        mCollapsingToolbarLayout.setTitle(getString(R.string.title_activity_projectList));
-        mCollapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(R.color.content_background_color));
-        mCollapsingToolbarLayout.setCollapsedTitleTextColor(getResources().getColor(R.color.content_background_color));
-
-        setMdToolBar(R.id.id_material_toolbar);
-
-        //工具条图片
-        mToolBarImageView = (AppCompatImageView) findViewById(R.id.id_home_toolbarimageview);
-        mToolBarImageView.setImageResource(R.drawable.vp_bg_1);
-
-        //AppBarLayout
-        mAppBarLayout = (AppBarLayout) findViewById(R.id.id_home_appbarlayout);
-
-        //actionBar 启用左侧按钮
-        setMDToolBarBackEnable(true);
-    }
-
-    /**
-     * 获取appBarLayout
-     **/
-    public AppBarLayout getAppBarLayout() {
-        return mAppBarLayout;
-    }
-
+     *侧滑菜单的点击事件
+     */
     @Override
     public boolean onNavigationItemSelected(MenuItem menuItem) {
         if (mPreMenuItem != null) {
@@ -174,22 +162,65 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
         return true;
     }
 
+    //主要方法+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
-     * 替换主页fragment信息
-     * *
+     *  设置导航菜单相关属性
      */
-    private void menuItemClick(Fragment toReplaceFragment) {
-        //替换fragment
+    private void setUpDrawerLayout() {
+        //滑动菜单总布局
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.id_materialhome_drawer_layout);
+
+        //菜单按钮
+        mDrawerToggle = new ActionBarDrawerToggleCompat(this, mDrawerLayout, R.string.string_home_title, R.string.string_home_materiel_sync);
+        mDrawerToggle.setSimpleDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                String userName = SharedPreferencesHelper.getUserRealName(MaterialHomeActivity.this);
+
+                TextView mUserNameTextView = (TextView) drawerView.findViewById(R.id.id_home_username);
+                mUserNameTextView.setText(userName);
+
+                RoundImageView roundImageView = (RoundImageView) drawerView.findViewById(R.id.id_user_image);
+                ViewGroup.LayoutParams layoutParams = roundImageView.getLayoutParams();
+                roundImageView.setImageDrawable(new UserNameDrawable(userName, layoutParams.width, layoutParams.height, getResources().getDimension(R.dimen.user_image_text_size)));
+            }
+        });
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+
+        //导航栏
+        NavigationView mNavigationView = (NavigationView) findViewById(R.id.id_materialhome_nv_menu);
+        mNavigationView.setNavigationItemSelectedListener(this);
+
+        //可折叠ToolBar
+        mCollapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.id_home_collapsingtoolbarlayout);
+        mCollapsingToolbarLayout.setTitle(getString(R.string.title_activity_projectList));
+        mCollapsingToolbarLayout.setExpandedTitleColor(getResources().getColor(R.color.content_background_color));
+        mCollapsingToolbarLayout.setCollapsedTitleTextColor(getResources().getColor(R.color.content_background_color));
+
+        setMdToolBar(R.id.id_material_toolbar);
+
+        //工具条图片
+        mToolBarImageView = (AppCompatImageView) findViewById(R.id.id_home_toolbarimageview);
+        mToolBarImageView.setImageResource(R.drawable.vp_bg_1);
+
+        //AppBarLayout
+        mAppBarLayout = (AppBarLayout) findViewById(R.id.id_home_appbarlayout);
+
+        //actionBar 启用左侧按钮
+        setMDToolBarBackEnable(true);
+    }
+    /**
+     * 添加系统默认的Fragment
+     **/
+    private void addDefaultFragment() {
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.id_fragment_home_content, toReplaceFragment);
+        transaction.add(R.id.id_fragment_home_content, currentFragment = new ProjectListFragment());
         transaction.commit();
     }
-
     /**
-     * *
      * 检查系统登陆状态
-     * *
      */
     private void checkLogin() {
         if (!NetworkManager.isConnectAvailable(this)) {
@@ -216,6 +247,23 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
         });
     }
 
+    //次要方法+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 获取appBarLayout
+     **/
+    public AppBarLayout getAppBarLayout() {
+        return mAppBarLayout;
+    }
+    /**
+     * 替换主页fragment信息
+     */
+    private void menuItemClick(Fragment toReplaceFragment) {
+        //替换fragment
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.id_fragment_home_content, toReplaceFragment);
+        transaction.commit();
+    }
     /***
      * 退出系统
      **/
@@ -249,8 +297,6 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
             builder.create().show();
         }
     }
-
-
     /**
      * 清除ImageLoader 和 OkHttpClient缓存
      **/
@@ -262,8 +308,6 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
             Log.e(TAG, "clearCache: ", e);
         }
     }
-
-
     /**
      * 显示退出提示框
      * *
@@ -290,63 +334,8 @@ public class MaterialHomeActivity extends BaseActivity implements NavigationView
 
         builder.create().show();
     }
-
-    @Override
-    public void onBackPressed() {
-        if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
-            mDrawerLayout.closeDrawer(Gravity.LEFT);
-            return;
-        }
-        showBackPressedAlert();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        JPushInterface.onResume(this);
-
-    }
-
-    @Override
-    protected void onPause() {
-        JPushInterface.onPause(this);
-        super.onPause();
-    }
-
-    @Override
-    public void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        mDrawerToggle.syncState();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_home, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        switch (item.getItemId()) {
-            case R.id.menu_item_about:
-                showAbout();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     private void showAbout() {
         PopupToast.show(this, Gravity.BOTTOM, PackageUtil.isDebugEnable(this) ? "DEBUG" : "RELEASE", PopupToast.CUSTOME);
     }
-
 
 }

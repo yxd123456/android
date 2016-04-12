@@ -53,6 +53,7 @@ import java.util.List;
  * 百度地图操作基类
  */
 public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.OnMarkerClickListener, BaiduMap.OnPolylineClickListener, BaiduMap.OnMapStatusChangeListener, BDLocationListener, BaiduMap.OnMapLoadedCallback, BaiduMap.OnMarkerDragListener {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = BaseMapActivity.class.getSimpleName();
 
     public MapView mMapView = null;//百度地图视图对象
@@ -73,7 +74,7 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
     public ImageView mapCenterImageView;
     public TextView latLongTextView;
 
-    //生命周期事件方法
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,53 +83,17 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         mapSdkReceiver.registerMapSdkReceiver(this);
         showProgressHudWidthText(getResources().getString(R.string.string_initbaidumaping));
     }
-
-    /**
-     * 显示加载框
-     **/
-    public void showProgressHudWidthText(final String text) {
-        mProgressHUD = ProgressHUD.show(this, text);
-    }
-
-    /***
-     * 移除加载框
-     **/
-    public void removeProgressHud() {
-        if (mProgressHUD != null) {
-            mProgressHUD.dismiss();
-        }
-    }
-
-    /**
-     * @see com.baidu.mapapi.map.MapView
-     * *
-     */
-    @Override
-    public void setContentView(int layoutResID) {
-        super.setContentView(layoutResID);
-        mMapView = (MapView) findViewById(R.id.bmapView);
-        if (mMapView == null) {
-            throw new RuntimeException("必须有ID为:bmapView,的com.baidu.mapapi.map.MapView地图对象");
-        }
-        initMapAndLocatinClient();
-        addCurrentLatLongTextView();
-    }
-
-
     @Override
     protected void onResume() {
         super.onResume();
         mMapView.onResume();
     }
-
     @Override
     protected void onPause() {
         super.onPause();
         mMapView.onPause();
         mMapStatusHandler.removeCallbacksAndMessages(null);
     }
-
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -147,20 +112,86 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         mMapView.onDestroy();
     }
 
-    //自定义事件方法
+    @Override
+    public void setContentView(int layoutResID) {
+        super.setContentView(layoutResID);
+        mMapView = (MapView) findViewById(R.id.bmapView);
+        if (mMapView == null) {
+            throw new RuntimeException("必须有ID为:bmapView,的com.baidu.mapapi.map.MapView地图对象");
+        }
+        initMapAndLocatinClient();
+        addCurrentLatLongTextView();
+    }
+    //方法回调事件方法
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return false;
+    }
+    @Override
+    public boolean onPolylineClick(Polyline polyline) {
+        return false;
+    }
+    @Override
+    public void onMapStatusChangeStart(MapStatus mapStatus) {
+        currentMapZoomLevel = mapStatus.zoom;
+    }
+    @Override
+    public void onMapStatusChange(MapStatus mapStatus) {
+        currentMapZoomLevel = mapStatus.zoom;
+    }
+    @Override
+    public void onMapStatusChangeFinish(MapStatus mapStatus) {
+        currentMapZoomLevel = mapStatus.zoom;
+    }
+    @Override
+    public void onReceiveLocation(BDLocation bdLocation) {
+    }
+    @Override
+    public void onMapLoaded() {
+      /*  removeProgressHud();*/
+        Log.d(TAG, "onMapLoaded: ");
+    }
+    @Override
+    public void onMarkerDrag(Marker marker) {
 
+    }
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+
+    }
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 显示加载框
+     **/
+    public void showProgressHudWidthText(final String text) {
+        mProgressHUD = ProgressHUD.show(this, text);
+    }
+    /***
+     * 移除加载框
+     **/
+    public void removeProgressHud() {
+        if (mProgressHUD != null) {
+            mProgressHUD.dismiss();
+        }
+    }
+    /**
+     * @see com.baidu.mapapi.map.MapView
+     */
+    //自定义事件方法
     /**
      * 初始化百度地图和百度地图定位客户端参数信息
-     * *
      */
     private void initMapAndLocatinClient() {
         this.onInitMapOption();
         this.onInitMapLocationClientOption();
     }
-
     /**
      * 初始化百度地图
-     * *
      */
     public void onInitMapOption() {
         mMapView.showZoomControls(false);
@@ -176,11 +207,8 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         mBaiduMap.setOnMapLoadedCallback(this);
         mBaiduMap.setOnMarkerDragListener(this);
     }
-
-
     /**
      * 初始化百度地图定位组件
-     * *
      */
     private void onInitMapLocationClientOption() {
         //百度地图定位相关参数设置
@@ -198,8 +226,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         mLocationClient.registerLocationListener(this);
         mLocationClient.setLocOption(clientOption);
     }
-
-
     /**
      * 设置用户位置信息
      **/
@@ -209,7 +235,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.setMyLocationData(myLocationData);
     }
-
     /**
      * 设置定位模式配置
      **/
@@ -219,7 +244,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.setMyLocationConfigeration(var1);
     }
-
     /**
      * 获取百度地图的当前定位模式
      **/
@@ -230,7 +254,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             return MyLocationConfiguration.LocationMode.NORMAL;
         }
     }
-
     /**
      * 定位百度地图到某一个文字
      **/
@@ -244,7 +267,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
 
     }
-
     /**
      * 隐藏infoWindow
      **/
@@ -254,7 +276,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.hideInfoWindow();
     }
-
     /**
      * 显示infoWindow
      **/
@@ -264,7 +285,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.showInfoWindow(infoWindow);
     }
-
     /**
      * 获取百度地图最大缩放数
      **/
@@ -275,7 +295,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             return 0;
         }
     }
-
     /***
      * 清除百度地图
      **/
@@ -285,7 +304,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.clear();
     }
-
     /**
      * 在百度地图上添加overlay
      ***/
@@ -295,14 +313,12 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         return mBaiduMap.addOverlay(overlayOptions);
     }
-
     /***
      * 百度地图定位是否开启
      **/
     public boolean bdIsMyLocationEnabled() {
         return !(mMapView == null || mBaiduMap == null) && mBaiduMap.isMyLocationEnabled();
     }
-
     /***
      * 设置是否开启百度地图定位
      **/
@@ -312,12 +328,9 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.setMyLocationEnabled(enable);
     }
-
-
     /**
      * 更新地图上采集的点位信息
      * 包括 立杆,变压箱，户表，电缆井，箱式开关站，开闭所，箱式变压站
-     * *
      */
     public void addMapPointMarkers(long currentProjectId, String... excludeIds) {
         List<MapPoiEntity> poiEntityList = new ArrayList<>();
@@ -348,7 +361,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         Log.d(TAG, "isFirstIn:" + isFirstIn);
         centerWithMarkers(poiEntityList);
     }
-
     /**
      * 根据点位不同的状态在地图上显示不同的点位
      **/
@@ -357,7 +369,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         int iconKey = MapIconHelper.convertNumKeyByPointType(entity.getPointType());
         addMapPoiMarkerWithObj(entity, MapIconHelper.getInstance().generateBitmapWithStatus(iconKey, status));
     }
-
     /**
      * 根据已有的点位进行居中地图
      **/
@@ -385,7 +396,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             }
         }
     }
-
     /**
      * 两次更新地图位置
      **/
@@ -403,10 +413,8 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             }
         }, 200);
     }
-
     /**
      * 更新地图上点位所携带信息
-     *
      * @param poiEditEntity 点位所携带的数据
      * @param markerIcon    点位图标
      */
@@ -414,8 +422,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         LatLng latLng = new LatLng(poiEditEntity.getPointLatitude(), poiEditEntity.getPointLongitude());
         return addMapMarkerWithBundle(latLng, markerIcon, poiEditEntity, true);
     }
-
-
     /**
      * 请求定位
      * 在网络可用的时候使用网络定位，网络不可用的时候使用离线定位
@@ -432,11 +438,8 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             PopupToast.show(this, Gravity.BOTTOM, "当前网络不可用,正在使用离线定位中......", PopupToast.CUSTOME);
         }
     }
-
     /**
      * 开启和关闭百度地图定位和地图定位图层
-     * <p/>
-     * *
      */
     public void setBdMapLocationEnable(boolean enable) {
         //启用百度地图定位
@@ -458,15 +461,12 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             Log.d(TAG, "停止百度地图定位，并关闭百度地图定位图层");
         }
     }
-
     /**
      * 获取屏幕中心点的地图坐标
-     * *
      */
     public LatLng getMapCenterLatLongFormScreen() {
         return mBaiduMap.getProjection().fromScreenLocation(getMapCenterPoint());
     }
-
     /**
      * 获取屏幕中心点坐标
      **/
@@ -477,7 +477,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         int right = mMapView.getRight();
         return new Point((right - left) / 2, (bottom - top) / 2);
     }
-
     /**
      * 在地图中间添加视图
      ***/
@@ -521,7 +520,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mMapView.addView(latLongTextView);
     }
-
     /**
      * 移除屏幕中心视图
      **/
@@ -534,7 +532,6 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
             mMapView.removeView(mapCenterImageView);
         }
     }
-
     /**
      * 获取屏幕中心点位携带经纬度信息
      **/
@@ -551,16 +548,11 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         bundle.putSerializable(Constans.POINT_OBJ_KEY, mapPoiEntity);
         return bundle;
     }
-
-
     /**
      * 在地图上添加图标信息并设置携带的信息
-     *
      * @param markerLatLong 图标经纬度信息
      * @param markerIcon    点位图标
      * @param markerExtras  点位携带数据
-     *                      <p/>
-     *                      *
      */
     public Marker addMapMarkerWithBundle(LatLng markerLatLong, BitmapDescriptor markerIcon, Serializable markerExtras, boolean dragable) {
         if (markerLatLong == null || markerIcon == null || markerExtras == null) {
@@ -579,14 +571,10 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         mMarkerPoint.setExtraInfo(bundle);
         return mMarkerPoint;
     }
-
     /**
      * 在地图上添加图标信息
-     *
      * @param markerLatLong 图标经纬度信息
      * @param markerIcon    点位图标
-     *                      <p/>
-     *                      *
      */
     public Marker addMapMarker(LatLng markerLatLong, BitmapDescriptor markerIcon, boolean dragable) {
         MarkerOptions opa = new MarkerOptions()
@@ -602,15 +590,11 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         return (Marker) overlay;
     }
-
     /**
      * 在地图上添加线信息
-     *
      * @param lineExtras 线携带的信息
      * @param color      线颜色
      * @param pots       线条点位列表
-     *                   <p/>
-     *                   *
      */
     public Polyline addMapPolylineWithBundle(List<LatLng> pots, int color, Serializable lineExtras) {
         if (pots == null || lineExtras == null) {
@@ -628,15 +612,10 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         polyline.setExtraInfo(bundle);
         return polyline;
     }
-
-
     /**
      * 在地图上线中点添加线长度信息
-     *
      * @param startLatlong 开始点经纬度
      * @param endLatlong   结束点经纬度
-     *                     <p/>
-     *                     *
      */
     public void addMapPolylineCenterText(LatLng startLatlong, LatLng endLatlong, String text) {
         if (startLatlong == null || endLatlong == null) {
@@ -653,14 +632,10 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
 
         bdAddOverLay(textOptions);
     }
-
     /**
      * 在点位的上方添加标注
-     *
      * @param latlong 经纬度
      * @param text   标注文字
-     *                     <p/>
-     *                     *
      */
     public void addMapPointAnnotationText(LatLng latlong, String text) {
         if (latlong == null || text == null) {
@@ -677,14 +652,10 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
 
         bdAddOverLay(textOptions);
     }
-
     /**
      * 在地图上添加线信息
-     *
      * @param color 线颜色
      * @param pots  线条点位列表
-     *              <p/>
-     *              *
      */
     public Polyline addMapPolyline(List<LatLng> pots, int color) {
         OverlayOptions polygonOption = new PolylineOptions().points(pots).color(color);
@@ -694,26 +665,14 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         return (Polyline) overlay;
     }
-
-
-/*    public Polygon addMapPolygon(){
-
-
-    }*/
-
-
     /**
      * 获取当前系统的缩放
-     * *
      */
     public float getCurrentMapZoomLevel() {
         return currentMapZoomLevel;
     }
-
-
     /**
      * 检查当前地图是否是最大缩放
-     * *
      */
     public boolean checkIsMaxZoomMap() {
         if (bdGetMaxZoomLevel() == getCurrentMapZoomLevel()) {
@@ -724,57 +683,4 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         return false;
     }
 
-    //方法回调事件方法
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        return false;
-    }
-
-    @Override
-    public boolean onPolylineClick(Polyline polyline) {
-        return false;
-    }
-
-    @Override
-    public void onMapStatusChangeStart(MapStatus mapStatus) {
-        currentMapZoomLevel = mapStatus.zoom;
-    }
-
-    @Override
-    public void onMapStatusChange(MapStatus mapStatus) {
-        currentMapZoomLevel = mapStatus.zoom;
-    }
-
-    @Override
-    public void onMapStatusChangeFinish(MapStatus mapStatus) {
-        currentMapZoomLevel = mapStatus.zoom;
-    }
-
-    @Override
-    public void onReceiveLocation(BDLocation bdLocation) {
-    }
-
-
-    @Override
-    public void onMapLoaded() {
-      /*  removeProgressHud();*/
-        Log.d(TAG, "onMapLoaded: ");
-    }
-
-
-    @Override
-    public void onMarkerDrag(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-
-    }
 }

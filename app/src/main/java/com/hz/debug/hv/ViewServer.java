@@ -156,7 +156,8 @@ public class ViewServer implements Runnable {
      * 
      * If your application does not have the <code>android:debuggable</code>
      * flag set in its manifest, the server returned by this method will
-     * be a dummy object that does not do anything. This allows you to use
+     * be a dummy object
+     * that does not do anything. This allows you to use
      * the same code in debug and release versions of your application.
      * 
      * @param context A Context used to check whether the application is

@@ -30,8 +30,6 @@ public class OffLineMapAdapter extends RecyclerView.Adapter<OffLineMapAdapter.Ba
 
 
     public OffLineMapAdapter(OffLineMapListFragment offLineMapListFragment, List<OfflineMapCityEntity> offlineMapCityEntities) {
-        Log.d("Test",getClass().getSimpleName()+"被调用了");
-
         this.baseActivity = (BaseActivity) offLineMapListFragment.getActivity();
         this.offLineMapListFragment = offLineMapListFragment;
         this.offlineMapCityEntities = offlineMapCityEntities;

@@ -31,6 +31,7 @@ import com.squareup.okhttp.RequestBody;
  * *
  */
 public class LoginActivity extends BaseActivity implements View.OnClickListener {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String KEY_USERID = "KEY_USERID";
     public static final String KEY_USERNAME = "KEY_USERNAME";
     public static final String KEY_PASSWD = "KEY_PASSWD";
@@ -40,13 +41,34 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
     private ValidaterEditText mUserName;//用户名输入
     private ValidaterEditText mPassWd;//密码输入
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         initComponents();
     }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mLoginProgressHUD != null && mLoginProgressHUD.isShowing()) {
+            mLoginProgressHUD.dismiss();
+        }
+    }
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.id_button_login:
+                validateLoginInfo();
+                break;
+        }
+    }
+    @Override
+    public void onBackPressed() {
 
+    }
+
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
      * 初始化系统相关信息
      **/
@@ -54,10 +76,10 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         initViews();
         displayLoginInfoFromPreferences();
     }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
     /**
      * 展示配置文件中存储的用户名密码信息
-     * *
      */
     private void displayLoginInfoFromPreferences() {
         String userName = SharedPreferencesHelper.getUserNameFrom(this);
@@ -68,49 +90,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
             mPassWd.setText(passWd);
         }
     }
-
-    /**
-     * 初始化系统视图
-     **/
-    private void initViews() {
-        setMdToolBar(R.id.id_material_toolbar);
-        setMDToolBarBackEnable(false);
-        setMDToolBarTitle(R.string.title_activity_login);
-
-        mUserName = (ValidaterEditText) findViewById(R.id.id_edittext_username);
-        mPassWd = (ValidaterEditText) findViewById(R.id.id_edittext_passwd);
-        Button mLogin = (Button) findViewById(R.id.id_button_login);
-        mLogin.setOnClickListener(this);
-        ImageView mImageView = (ImageView) findViewById(R.id.id_imageview_login);
-        String imageLoaderUrl = Constans.ImageLoaderMark.DRAWABLE + R.drawable.vp_bg_1;
-        ImageLoader.getInstance().displayImage(imageLoaderUrl, mImageView);
-
-        findViewById(R.id.id_imageview_login).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "isRemberMeExpiredSync: " + HttpManager.getInstance().isRemberMeExpiredSync());
-                    }
-                }).start();
-            }
-        });
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.id_button_login:
-                validateLoginInfo();
-                break;
-        }
-    }
-
     /**
      * 处理登陆输入验证逻辑
-     * **
      */
     private void validateLoginInfo() {
         //验证用户名密码有没有输入
@@ -144,10 +125,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         mLoginProgressHUD = ProgressHUD.show(this, "登录系统中");
         login(loginUrl, userName, passwd, loginUrlGetData);
     }
-
     /**
      * 登陆系统
-     *
      * @param passwd   密码
      * @param userName 用户名
      * @param loginUrl 登陆系统地址
@@ -222,10 +201,8 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
             }
         }.execute();
     }
-
     /**
      * 根据登陆系统返回值检查登陆结果
-     *
      * @param respStr 登陆返回字符串
      */
     private boolean saveUserData(String respStr) {
@@ -242,18 +219,35 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         }
         return false;
     }
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 初始化系统视图
+     **/
+    private void initViews() {
+        setMdToolBar(R.id.id_material_toolbar);
+        setMDToolBarBackEnable(false);
+        setMDToolBarTitle(R.string.title_activity_login);
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mLoginProgressHUD != null && mLoginProgressHUD.isShowing()) {
-            mLoginProgressHUD.dismiss();
-        }
-    }
+        mUserName = (ValidaterEditText) findViewById(R.id.id_edittext_username);
+        mPassWd = (ValidaterEditText) findViewById(R.id.id_edittext_passwd);
+        Button mLogin = (Button) findViewById(R.id.id_button_login);
+        mLogin.setOnClickListener(this);
+        ImageView mImageView = (ImageView) findViewById(R.id.id_imageview_login);
+        String imageLoaderUrl = Constans.ImageLoaderMark.DRAWABLE + R.drawable.vp_bg_1;
+        ImageLoader.getInstance().displayImage(imageLoaderUrl, mImageView);
 
-    @Override
-    public void onBackPressed() {
+        findViewById(R.id.id_imageview_login).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "isRemberMeExpiredSync: " + HttpManager.getInstance().isRemberMeExpiredSync());
+                    }
+                }).start();
+            }
+        });
     }
 
 }

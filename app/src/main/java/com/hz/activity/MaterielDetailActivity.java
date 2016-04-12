@@ -36,6 +36,7 @@ import java.util.List;
  * *
  */
 public class MaterielDetailActivity extends BaseActivity {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = MaterielDetailActivity.class.getSimpleName();
     private List<MaterielDetailEntity> mMaterielDetailListEntityList = new ArrayList<>();
     private BaseAdapter mMaterielDetaillListAdapter = null;
@@ -43,45 +44,24 @@ public class MaterielDetailActivity extends BaseActivity {
     public Handler mDataHandler = null;//后台任务handler
     public HandlerThread handlerThread;
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_materiel_detail);
         initComponents();
     }
-
-    /**
-     * 初始化系统组件信息
-     * *
-     */
-    private void initComponents() {
-        setMdToolBar(R.id.id_material_toolbar);
-        setMDToolBarBackEnable(true);
-
-
-        handlerThread = new HandlerThread("dataHandlerThread");
-        handlerThread.start();
-        mDataHandler = new Handler(handlerThread.getLooper());
-
-        /**解析传入参数**/
-        Bundle bundle = this.getIntent().getExtras();
-        int iconResId = bundle.getInt(Constans.MaterielDetail.MATERIEL_DETAIL_ICON_KEY);
-        String title = bundle.getString(Constans.MaterielDetail.MATERIEL_DETAIL_TITLE_KEY);
-        String materielType = bundle.getString(Constans.MaterielDetail.MATERIEL_DETAIL_TYPE_KEY);
-
-        setMDToolBarTitle(title + "列表");
-        /**初始化组件信息**/
-        ListView mMaterielDetailList = (ListView) findViewById(R.id.id_listview_materialdetail_list);
-        mMaterielDetaillListAdapter = new MaterielDetailListAdapter(this, mMaterielDetailListEntityList);
-        mMaterielDetailList.setAdapter(mMaterielDetaillListAdapter);
-
-        /**从数据库获取对应数据**/
-        initDateByMaterielType(materielType);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mDataHandler.removeCallbacksAndMessages(null);
+        mUiHandler.removeCallbacksAndMessages(null);
+        handlerThread.quit();
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
      * 根据材料的类型初始化不同类型的材料详细数据
-     * *
      */
     private void initDateByMaterielType(final String materielType) {
         mDataHandler.post(new Runnable() {
@@ -105,10 +85,8 @@ public class MaterielDetailActivity extends BaseActivity {
             }
         });
     }
-
     /**
      * 根据不同的材料类型初始化不同的材料数据
-     * *
      */
     private void queryMaterielsByType(String materielType) {
         switch (materielType) {
@@ -188,17 +166,37 @@ public class MaterielDetailActivity extends BaseActivity {
 
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    /**
+     * 初始化系统组件信息
+     */
+    private void initComponents() {
+        setMdToolBar(R.id.id_material_toolbar);
+        setMDToolBarBackEnable(true);
+
+
+        handlerThread = new HandlerThread("dataHandlerThread");
+        handlerThread.start();
+        mDataHandler = new Handler(handlerThread.getLooper());
+
+        /**解析传入参数**/
+        Bundle bundle = this.getIntent().getExtras();
+        int iconResId = bundle.getInt(Constans.MaterielDetail.MATERIEL_DETAIL_ICON_KEY);
+        String title = bundle.getString(Constans.MaterielDetail.MATERIEL_DETAIL_TITLE_KEY);
+        String materielType = bundle.getString(Constans.MaterielDetail.MATERIEL_DETAIL_TYPE_KEY);
+
+        setMDToolBarTitle(title + "列表");
+        /**初始化组件信息**/
+        ListView mMaterielDetailList = (ListView) findViewById(R.id.id_listview_materialdetail_list);
+        mMaterielDetaillListAdapter = new MaterielDetailListAdapter(this, mMaterielDetailListEntityList);
+        mMaterielDetailList.setAdapter(mMaterielDetaillListAdapter);
+
+        /**从数据库获取对应数据**/
+        initDateByMaterielType(materielType);
+    }
     private void printListObj(List objectList) {
         for (Object object : objectList) {
             Log.d(TAG, "printListObj: " + object.toString());
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mDataHandler.removeCallbacksAndMessages(null);
-        mUiHandler.removeCallbacksAndMessages(null);
-        handlerThread.quit();
     }
 }

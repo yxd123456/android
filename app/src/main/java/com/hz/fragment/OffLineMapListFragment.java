@@ -30,6 +30,7 @@ import java.util.List;
  * 离线地图fragment
  */
 public class OffLineMapListFragment extends BaseFragment implements MKOfflineMapListener {
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     protected static final String TAG = OffLineMapListFragment.class.getSimpleName();
     private MKOfflineMap mOfflineMap;//离线地图功能
     private List<OfflineMapCityEntity> offlineMapCityEntities = new ArrayList<>(); //离线地图的数据
@@ -40,6 +41,7 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
     public Handler mDataHandler = null;//后台任务handler
     public HandlerThread handlerThread;
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -47,40 +49,33 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
         initComponents();
         return rootView;
     }
-
-    private void initComponents() {
-        handlerThread = new HandlerThread("dataHandlerThread");
-        handlerThread.start();
-        mDataHandler = new Handler(handlerThread.getLooper());
-
-        initOfflineMap();//初始化离线地图对象
-        initListView();//初始化ListView
-        setUpOffLineMapData();
+    @Override
+    public void onDestroyView() {
+        mOfflineMap.destroy();
+        super.onDestroyView();
+        mDataHandler.removeCallbacksAndMessages(null);
+        mUiHandler.removeCallbacksAndMessages(null);
+        handlerThread.quit();
     }
 
-    /**
-     * 初始化离线地图
-     */
-    private void initOfflineMap() {
-        mOfflineMap = new MKOfflineMap();
-        mOfflineMap.init(this); // 设置监听
+    @Override
+    public void onGetOfflineMapState(int type, int cityCode) {
+        switch (type) {
+            case MKOfflineMap.TYPE_DOWNLOAD_UPDATE: // 离线地图下载更新事件类型
+                MKOLUpdateElement update = mOfflineMap.getUpdateInfo(cityCode);
+                postToCalcDownProgress(update, cityCode);
+                break;
+            case MKOfflineMap.TYPE_NEW_OFFLINE: // 有新离线地图安装
+                Log.d(TAG, "onGetOfflineMapState: " + type + "  " + cityCode);
+                break;
+            case MKOfflineMap.TYPE_VER_UPDATE: // 版本更新提示
+                Log.d(TAG, "onGetOfflineMapState: " + type + "  " + cityCode);
+                break;
+        }
+        Log.d(TAG, "onGetOfflineMapState: " + type + "" + cityCode);
     }
 
-    /**
-     * 初始化数据列表
-     **/
-    private void initListView() {
-        RecyclerView mOffLineRecyclerView = (RecyclerView) rootView.findViewById(R.id.id_expandablelistview_offlinelist);
-        mOffLineMapAdapter = new OffLineMapAdapter(this, offlineMapCityEntities);
-        mOffLineRecyclerView.setAdapter(mOffLineMapAdapter);
-
-
-        //设置布局管理器
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this.getActivity());
-        mOffLineRecyclerView.setLayoutManager(layoutManager);
-        mOffLineRecyclerView.setItemAnimator(new DefaultItemAnimator());
-    }
-
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
      * 设置离线地图数据
      **/
@@ -92,10 +87,8 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
             }
         });
     }
-
     /**
      * 刷新指定位置数据
-     *
      * @param position 位置
      **/
     private void postToItemInsert(final int position) {
@@ -108,7 +101,6 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
             }
         });
     }
-
     /**
      * 刷新数据
      **/
@@ -122,10 +114,8 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
             }
         });
     }
-
     /**
      * 下载离线地图数据
-     *
      * @param cityEntity 带现在的地图对象数据
      * @param position   位置
      **/
@@ -141,10 +131,8 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
         cityEntity.setDownLoadStatus(OfflineMapCityEntity.DownLoadStatus.WAIT);//新增下载后
         mOffLineMapAdapter.notifyItemChanged(position);
     }
-
     /**
      * 初始化离线地图数据
-     * *
      */
     private void initOffLineMapData() {
         int i = 0;
@@ -172,11 +160,8 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
 
         postToRefreshAll();
     }
-
-
     /**
      * 为cityBean计算进度 和下载状态
-     * *
      */
     public int calItemProgressAndStatus(OfflineMapCityEntity cityBean, List<MKOLUpdateElement> allUpdateInfo) {
         int pro = 0;
@@ -203,27 +188,8 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
         }
         return pro;
     }
-
-    @Override
-    public void onGetOfflineMapState(int type, int cityCode) {
-        switch (type) {
-            case MKOfflineMap.TYPE_DOWNLOAD_UPDATE: // 离线地图下载更新事件类型
-                MKOLUpdateElement update = mOfflineMap.getUpdateInfo(cityCode);
-                postToCalcDownProgress(update, cityCode);
-                break;
-            case MKOfflineMap.TYPE_NEW_OFFLINE: // 有新离线地图安装
-                Log.d(TAG, "onGetOfflineMapState: " + type + "  " + cityCode);
-                break;
-            case MKOfflineMap.TYPE_VER_UPDATE: // 版本更新提示
-                Log.d(TAG, "onGetOfflineMapState: " + type + "  " + cityCode);
-                break;
-        }
-        Log.d(TAG, "onGetOfflineMapState: " + type + "" + cityCode);
-    }
-
     /**
      * 刷新指定itme数据
-     *
      * @param position 城市位置
      */
     public void postToRefreshItemByPosition(final int position) {
@@ -257,10 +223,8 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
             }
         }
     }
-
     /**
      * 计算进度条进度
-     * *
      */
     private void postToCalcDownProgress(final MKOLUpdateElement update, final int cityCode) {
         mDataHandler.post(new Runnable() {
@@ -288,14 +252,35 @@ public class OffLineMapListFragment extends BaseFragment implements MKOfflineMap
         });
     }
 
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    private void initComponents() {
+        handlerThread = new HandlerThread("dataHandlerThread");
+        handlerThread.start();
+        mDataHandler = new Handler(handlerThread.getLooper());
 
-    @Override
-    public void onDestroyView() {
-        mOfflineMap.destroy();
-        super.onDestroyView();
-        mDataHandler.removeCallbacksAndMessages(null);
-        mUiHandler.removeCallbacksAndMessages(null);
-        handlerThread.quit();
+        initOfflineMap();//初始化离线地图对象
+        initListView();//初始化ListView
+        setUpOffLineMapData();
     }
+    /**
+     * 初始化离线地图
+     */
+    private void initOfflineMap() {
+        mOfflineMap = new MKOfflineMap();
+        mOfflineMap.init(this); // 设置监听
+    }
+    /**
+     * 初始化数据列表
+     **/
+    private void initListView() {
+        RecyclerView mOffLineRecyclerView = (RecyclerView) rootView.findViewById(R.id.id_expandablelistview_offlinelist);
+        mOffLineMapAdapter = new OffLineMapAdapter(this, offlineMapCityEntities);
+        mOffLineRecyclerView.setAdapter(mOffLineMapAdapter);
 
+
+        //设置布局管理器
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this.getActivity());
+        mOffLineRecyclerView.setLayoutManager(layoutManager);
+        mOffLineRecyclerView.setItemAnimator(new DefaultItemAnimator());
+    }
 }
