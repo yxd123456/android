@@ -61,6 +61,9 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     public static final String LINE_START_KEY = "LINE_START_KEY";
     public static final String LINE_END_KEY = "LINE_END_KEY";
 
+    private ArrayList<Polyline> list_polyline = new ArrayList<Polyline>();
+    private ArrayList<MapLineEntity> list_mle = new ArrayList<MapLineEntity>();
+
     private AddCrossLineHelper addCrossLineHelper = new AddCrossLineHelper();//连接跨越线工具类
     private AddConnectWireHelper addConnectWireHelper = new AddConnectWireHelper();//添加导线/电缆连线辅助类
     private BatchAddConnectWireHelper batchAddConnectWireHelper = new BatchAddConnectWireHelper();//批量添加导线辅助类
@@ -102,9 +105,17 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
      * 后台线程
      **/
     private HandlerThread dataThread;
-
+    /**
+     * 批量删除
+     */
     private Button btn_delete;
+    /**
+     * 批量修改
+     */
+    private Button btn_change_all;
+
     private boolean flag_delete = false;
+    private boolean flag_change = false;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override//-->initComponents();
@@ -194,6 +205,17 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     @Override//处理地图上各种点击事件
     public void onClick(View v) {
         switch (v.getId()) {
+            case R.id.id_btn_change_all:
+                if(!flag_change){
+                    Toast.makeText(this, "开启批量修改", Toast.LENGTH_SHORT).show();
+                    startToBatchConnectLine();
+                    flag_change = true;
+                }else{
+                    Toast.makeText(this, "关闭批量修改", Toast.LENGTH_SHORT).show();
+                    flag_change = false;
+                }
+
+                break;
             case R.id.id_btn:
                 if(!flag_delete) {
                     Toast.makeText(this, "开启批量删除", Toast.LENGTH_SHORT).show();
@@ -217,7 +239,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 bdAnimateMapStatus(MapStatusUpdateFactory.zoomOut());
                 break;
             case R.id.id_ImageView_point://地图开始选择点位
-                Log.d("Do", "id_ImageView_point");
+                Log.d("Do", "WSSW");
                 startToChoosePoint();
                 break;
             case R.id.id_ImageView_batch_point://地图批量修改点位信息
@@ -331,6 +353,15 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 break;
             case R.id.id_button_batchline_ok://批量连线确定
                 Log.d("Do", "id_button_batchline_ok");
+                if(flag_change){
+
+                    list_mle.get(0).setLineEditType(Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD_C);
+                    list_mle.get(0).setLineType(Constans.MapAttributeType.WIRE_ELECTRIC_CABLE);//导线.电缆
+
+                    //线条编辑属性
+                    toEditLineAttributeActivity(list_mle.get(0));
+                    return;
+                }
 
                 if (batchAddConnectWireHelper.markerSize() >= BatchAddConnectWireHelper.CONNECT_WIRE_NUM) {
                     MapLineEntity mapLineEntity = new MapLineEntity();
@@ -521,15 +552,18 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     public boolean onPolylineClick(Polyline polyline) {
         Log.d("Do", "onPolylineClick");
 
-        //在打点中不能连线，不能点击线
-        if (isPointing || isConnectWire || isBatchLine || isBatchPoint) {
-            return false;
+        MapLineEntity entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
+        Log.d("KO", "惊喜"+entity.getLineName());
+        list_mle.add(entity);
+        if(flag_change){
+            // TODO: 2016/4/13
+            polyline.setColor(Color.RED);
+            list_polyline.add(polyline);
+
+            return true;
         }
 
-        MapLineEntity entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
-
         if(flag_delete){
-            // TODO: 2016/4/12
             assert entity != null;
             DataBaseManagerHelper.getInstance().removeLineByLineId(entity.getLineId());
             //清除地图上所有的overLay
@@ -547,7 +581,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                     postToRemoveProgressHud();
                 }
             });
-            return false;
+            return true;
         }
 
 
@@ -842,11 +876,13 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 case Constans.MapAttributeType.CROSS_LINE://跨越线
                     color = Color.BLUE;
                     text = DataBaseManagerHelper.getInstance().getLineWireTypeNameById(lineEntity.getLineWireTypeId());
+                    Log.d("KO", "关键线索1"+text);
                     addCrossLinePoints(lineEntity);
                     break;
                 case Constans.MapAttributeType.WIRE_ELECTRIC_CABLE://导线电缆
                     color = convertLineColorByLineItems(lineEntity.getMapLineItemEntityList());
                     text = Constans.DECIMALFORMAT_M.format(DistanceUtil.getDistance(startLatlong, endLatlong));
+                    Log.d("KO", "关键线索2"+text);
                     break;
             }
 
@@ -947,7 +983,34 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         mapLineEntity.setLineProjId(currentProjectId);
         mapLineEntity.setLineUserId(SharedPreferencesHelper.getUserId(this));
         bundle.putSerializable(Constans.LINE_OBJ_KEY, mapLineEntity);
+        Intent intent = new Intent(this, LineAttributeActivity.class);
+        //传入项目数据
+        bundle.putSerializable(ProjectListFragment.PROJECT_OBJ_KEY, projectEntity);
+        intent.putExtras(bundle);
+        startActivityForResult(intent, Constans.RequestCode.LINE_ATTRIBUTE_EDIT_REQUESTCODE);
+    }
+    public void toEditLineAttributeActivity(ArrayList<MapLineEntity> list) {
+        //修改导线/电缆属性时 如果是重复添加的 则修改
+        for (MapLineEntity mapLineEntity:list
+             ) {
+            if (mapLineEntity.getLineEditType() == Constans.AttributeEditType.EDIT_TYPE_ADD && mapLineEntity.getLineType() == Constans.MapAttributeType.WIRE_ELECTRIC_CABLE) {
+                //如果两点之间已经有一条线
+                MapLineEntity lineEntity = DataBaseManagerHelper.getInstance().getLineByLineStartPointIdAndEndPointId(mapLineEntity.getLineStartPointId(), mapLineEntity.getLineEndPointId());
+                if (lineEntity != null) {
+                    lineEntity.getMapLineItemEntityList();//查询线关联的线item信息
+                    mapLineEntity = lineEntity;
+                    mapLineEntity.setLineEditType(Constans.AttributeEditType.EDIT_TYPE_EDIT);
+                }
+            }
+        }
+        for (MapLineEntity mapLineEntity:list
+             ) {
+            mapLineEntity.setLineProjId(currentProjectId);
+            mapLineEntity.setLineUserId(SharedPreferencesHelper.getUserId(this));
+        }
 
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constans.LINE_OBJ_KEY_TEST, list_mle);
         Intent intent = new Intent(this, LineAttributeActivity.class);
         //传入项目数据
         bundle.putSerializable(ProjectListFragment.PROJECT_OBJ_KEY, projectEntity);
@@ -1070,29 +1133,45 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         if (data == null) {
             return;
         }
-        MapLineEntity lineEntity = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
+        //MapLineEntity lineEntity = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
+        MapLineEntity lineEntity1 = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
+        MapLineEntity lineEntity = list_mle.get(0);
+        lineEntity = lineEntity1;
+        Log.d("KO", "爆炸和行为"+lineEntity.getLineName()+" "+lineEntity1.getLineName());
         if (lineEntity == null) {
             return;
         }
         int editType = lineEntity.getLineEditType();
+        Log.d("KO", "开放的接口 "+editType);
         switch (editType) {
             case Constans.AttributeEditType.EDIT_TYPE_ADD: {//新增线信息是要设置点位的唯一标记信息
+                Log.d("KO", "开放的接口 "+1);
                 lineEntity.setLineProjId(currentProjectId);
                 lineEntity.setLineId(UUID.randomUUID().toString());//设置线唯一ID
                 DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(lineEntity);
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_EDIT: {//修改线时替换信息
+                Log.d("KO", "开放的接口 "+2);
                 DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(lineEntity);
                 break;
             }
+            case Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD_C: {//修改线时替换信息
+                Log.d("KO", "开放的接口 "+15);
+
+                batchAddConnectWireHelper.handlerBatchAddLine(this, lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this));
+                Log.d("KO", "大河未过");
+                break;
+            }
             case Constans.AttributeEditType.EDIT_TYPE_REMOVE: {//移除线
+                Log.d("KO", "开放的接口 "+3);
                 DataBaseManagerHelper.getInstance().removeLineByLineId(lineEntity.getLineId());
                 Log.d("Do", "移除了线");
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD://批量添加点位返回
-                batchAddConnectWireHelper.handlerBatchAddLine(lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this));
+                Log.d("KO", "开放的接口 "+4);
+                batchAddConnectWireHelper.handlerBatchAddLine(MainActivity.this, lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this));
                 break;
         }
     }
@@ -1254,6 +1333,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
      * 初始化系统相关视图组件信息
      */
     private void initViews() {
+        btn_change_all = (Button) findViewById(R.id.id_btn_change_all);
+        btn_change_all.setOnClickListener(this);
         btn_delete = (Button)findViewById(R.id.id_btn);
         btn_delete.setOnClickListener(this);
         mLocationImaveView = (AppCompatImageView) findViewById(R.id.id_ImageView_location);

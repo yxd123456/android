@@ -38,6 +38,7 @@ public class Constans {
     public static final String[] PROJECT_CRASH_DIR = new String[]{"crash"};//项目错误日志缓存路径
     public static final DecimalFormat DECIMALFORMAT_LATLONG = new DecimalFormat("#.00000");//经纬度默认格式化长度
     public static final DecimalFormat DECIMALFORMAT_M = new DecimalFormat("#");//长度格式化
+    public static final String LINE_OBJ_KEY_TEST = "test_ye" ;
 
     /**
      * 地图元素类型*
@@ -92,6 +93,7 @@ public class Constans {
         public static final int EDIT_TYPE_EDIT = 0;//编辑点位
         public static final int EDIT_TYPE_LINE_BATCHADD = 3;//批量新增线编辑类型
         public static final int EDIT_TYPE_POINT_BATCHUPDATE = 4;//批量修改点位编辑类型
+        public static final int EDIT_TYPE_LINE_BATCHADD_C = 15;
     }
 
     /**

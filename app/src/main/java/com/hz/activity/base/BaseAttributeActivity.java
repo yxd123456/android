@@ -276,11 +276,12 @@ public abstract class BaseAttributeActivity extends BaseActivity implements View
     //抽象方法+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     /**
      * 右变按钮被点击前触发
-     * *
+     * 点击删除
      */
     public abstract void onBeforeRightIconClick();
     /**
      * 设置修改以后的参数
+     * 点击完成
      */
     public abstract void onSetUpResult();
 

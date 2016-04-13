@@ -1,5 +1,6 @@
 package com.hz.helper;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -7,12 +8,19 @@ import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
+import com.baidu.platform.comapi.map.A;
+import com.baidu.platform.comapi.util.f;
 import com.hz.activity.MainActivity;
 import com.hz.common.Constans;
+import com.hz.entity.Lines;
 import com.hz.greendao.dao.MapLineEntity;
 import com.hz.greendao.dao.MapLineItemEntity;
 import com.hz.greendao.dao.MapPoiEntity;
+import com.hz.util.okhttp_extend.FileUtil;
+import com.lidroid.xutils.DbUtils;
+import com.lidroid.xutils.exception.DbException;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -24,6 +32,10 @@ public class BatchAddConnectWireHelper {
     private ArrayList<Marker> tempBatchLineMarkers = new ArrayList<>();
     private Polyline tempBatchLines;
     private int num = 0;
+    private ArrayList<String> markerIds;
+
+    private DbUtils dbUtils;
+    private boolean flag_test = false;
 
     public BatchAddConnectWireHelper() {
         Log.d("Test",getClass().getSimpleName()+"被调用了");
@@ -113,13 +125,83 @@ public class BatchAddConnectWireHelper {
     /**
      * 批量增加导线/电缆
      **/
-    public void handlerBatchAddLine(MapLineEntity lineEntity, long currentProjectId, long userId) {
-        ArrayList<String> markerIds = getMarkerIds();
+    public void handlerBatchAddLine(Context context, MapLineEntity lineEntity, long currentProjectId, long userId) {
+
+        Log.d("KO", "也许花朵也灭的话");
+
+
+
+        markerIds = getMarkerIds();
+
+    /*    if(markerIds.size()!=0) {
+            FileUtil.write(context, markerIds);
+
+        }else{
+            markerIds = FileUtil.read(context);
+        }*/
+
+        Log.d("KO", "我知道花开罚了"+markerIds.size());
         String preId = null;
         for (String id : markerIds) {
+            Log.d("KO", "markerIds: "+id);
             if (preId != null) {
                 MapPoiEntity strartPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(id);
+                Log.d("KO", "sP"+strartPoint.getPointName());
                 MapPoiEntity endPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(preId);
+                Log.d("KO", "eP"+endPoint.getPointName());
+                handlerBatchAddLineItem(strartPoint, endPoint, lineEntity, currentProjectId, userId);
+            }
+            preId = id;
+        }
+    }
+
+    public void handlerBatchAddLine(Context context, MapLineEntity lineEntity, long currentProjectId, long userId, ArrayList<MapLineEntity> list) {
+
+        Log.d("KO", "也许花朵也灭的话");
+
+        for (MapLineEntity entity:
+             list) {
+            entity = lineEntity;
+        }
+
+        markerIds = getMarkerIds();
+
+        if(markerIds.size()!=0) {
+            FileUtil.write(context, markerIds);
+
+        }else{
+            markerIds = FileUtil.read(context);
+        }
+
+        Log.d("KO", "我知道花开罚了"+markerIds.size());
+        String preId = null;
+        for (String id : markerIds) {
+            Log.d("KO", "markerIds: "+id);
+            if (preId != null) {
+                MapPoiEntity strartPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(id);
+                Log.d("KO", "sP"+strartPoint.getPointName());
+                MapPoiEntity endPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(preId);
+                Log.d("KO", "eP"+endPoint.getPointName());
+                handlerBatchAddLineItem(strartPoint, endPoint, lineEntity, currentProjectId, userId);
+            }
+            preId = id;
+        }
+    }
+
+    public void handlerBatchAddLine(MapLineEntity lineEntity, long currentProjectId, long userId) {
+
+
+
+        markerIds = getMarkerIds();
+
+        String preId = null;
+        for (String id : markerIds) {
+            Log.d("KO", "markerIds: "+id);
+            if (preId != null) {
+                MapPoiEntity strartPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(id);
+                Log.d("KO", "sP"+strartPoint.getPointName());
+                MapPoiEntity endPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(preId);
+                Log.d("KO", "eP"+endPoint.getPointName());
                 handlerBatchAddLineItem(strartPoint, endPoint, lineEntity, currentProjectId, userId);
             }
             preId = id;

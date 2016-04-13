@@ -187,5 +187,20 @@
                 android:background="@drawable/line_b" />
         </FrameLayout>
 
+        <FrameLayout
+            style="@style/map_operate_icon_background_style"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:padding="3dp"
+            android:animateLayoutChanges="true">
+
+            <Button
+                android:id="@+id/id_btn_change_all"
+                android:text="修改"
+                style="@style/map_operate_icon_style"
+                android:background="@drawable/line_b" />
+        </FrameLayout>
+
     </LinearLayout>
 </RelativeLayout>

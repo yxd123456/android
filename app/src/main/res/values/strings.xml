@@ -248,4 +248,5 @@
     <string name="string_localmap_nothave_data">没有相关离线地图数据</string>
     <string name="string_batchline_ok">确定</string>
     <string name="string_about">关于</string>
+    <string name="change_all">导线/电缆(批量修改)</string>
 </resources>

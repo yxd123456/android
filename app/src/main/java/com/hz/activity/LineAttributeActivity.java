@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
@@ -43,6 +44,7 @@ public class LineAttributeActivity extends BaseAttributeActivity {
     private ValidaterEditText mEditSpecificationNumber;//规格线数
     private TextView mEditLineLength;//导线/电缆长度
     private TableLayout mEditElectricCableTableLayout;//导线/电缆 属性
+    private ArrayList<MapLineEntity> list_mapObj;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
@@ -89,16 +91,20 @@ public class LineAttributeActivity extends BaseAttributeActivity {
     @Override
     public void onBeforeRightIconClick() {
         mapObj.setLineEditType(Constans.AttributeEditType.EDIT_TYPE_REMOVE);
+        Toast.makeText(this,"dsdsdasd",Toast.LENGTH_LONG).show();
     }
+
+    /**
+     * 点击完成按钮
+     */
     @Override
     public void onSetUpResult() {
-
         //移除默认图片
        /* mGalleryEntityList.remove(mGalleryEntityList.size() - 1);
         mapObj.setPointGalleryLists(mGalleryEntityList);*/
         mapObj.setLineWireTypeId(getString(mEditWireType.getTag()));
-
         mapObj.setLineName(mEditAttributeName.getText().toString());
+        Log.d("KO", mEditAttributeName.getText().toString());
         mapObj.setLineNote(mEditAttributeNote.getText().toString());
         mapObj.setLineRemoved(Constans.RemoveIdentified.REMOVE_IDENTIFIED_NORMAL);
         mapObj.setLineLength(Double.parseDouble(String.valueOf(mEditLineLength.getText().toString())));
@@ -139,19 +145,26 @@ public class LineAttributeActivity extends BaseAttributeActivity {
 
             MapLineItemEntity itemEntity = new MapLineItemEntity();
             itemEntity.setLineItemWireType(wireType);
+            Log.d("KO", itemEntity.getLineItemWireType()+"  1");
             itemEntity.setLineItemModeId(lineItemModeId);
+            Log.d("KO", itemEntity.getLineItemModeId()+"    2");
             itemEntity.setLineItemNum(itemNum);
+            Log.d("KO", itemEntity.getLineItemNum()+"   3");
             itemEntity.setLineItemId(hideId);
+            Log.d("KO", itemEntity.getLineItemId()+"    4");
             itemEntity.setLineItemStatus(lineStatus);
+            Log.d("KO", itemEntity.getLineItemStatus()+"    5");
             itemEntity.setLineItemRemoved(removeIdentifier);
+            Log.d("KO", itemEntity.getLineItemRemoved()+"   6");
             lineItemEntityList.add(itemEntity);
         }
+        Log.d("KO", lineItemEntityList.size()+" 7");
         mapObj.setMapLineItemEntityList(lineItemEntityList);
 
         //设置bundle
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constans.LINE_OBJ_KEY, mapObj);
-
+        Log.d("KO", mapObj.getLineName()+"  8");
         //设置intent
         Intent resultIntent = new Intent();
         resultIntent.putExtras(bundle);
@@ -192,10 +205,14 @@ public class LineAttributeActivity extends BaseAttributeActivity {
         //获取传入参数
         Bundle bundleParam = this.getIntent().getExtras();
         mapObj = (MapLineEntity) bundleParam.getSerializable(Constans.LINE_OBJ_KEY);
+        Log.d("KO", "执行力看1");
         if (mapObj == null) {
-            return;
+            list_mapObj = (ArrayList<MapLineEntity>)(bundleParam.getSerializable(Constans.LINE_OBJ_KEY_TEST));
+            if(list_mapObj == null)
+                analysisUiTitleAndFieldVisibleByPointType(list_mapObj.get(0).getLineType());
+                return;
         }
-
+        Log.d("KO", "执行力看2");
         //根据线类型显示不同的标题和控制组件的显示隐藏
         analysisUiTitleAndFieldVisibleByPointType(mapObj.getLineType());
         //根据参数显示修改或者新增
@@ -270,6 +287,8 @@ public class LineAttributeActivity extends BaseAttributeActivity {
             case Constans.MapAttributeType.WIRE_ELECTRIC_CABLE:
                 if (mapObj.getLineEditType() == Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD) {
                     setMDToolBarTitle(R.string.string_batch_wire_electriccable);
+                } else if(mapObj.getLineEditType() == Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD_C){
+                    setMDToolBarTitle(R.string.change_all);
                 } else {
                     setMDToolBarTitle(R.string.string_wire_electriccable);
                     animateVeiwVisible.add(linelength);
