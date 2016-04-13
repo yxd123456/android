@@ -116,6 +116,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
 
     private boolean flag_delete = false;
     private boolean flag_change = false;
+    private ArrayList<MapLineEntity> list_new_mle = new ArrayList<>();
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override//-->initComponents();
@@ -862,6 +863,17 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     private void addMapLines() {
         List<MapLineEntity> tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
 
+        if(list_new_mle != null&&list_new_mle.size()!=0) {
+            for (MapLineEntity lineEntity : tempLineEntityList) {
+                Log.d("KO", list_new_mle.size() + "大三大四");
+                Log.d("KO", lineEntity.getLineName() + "发生");
+                lineEntity.setLineName(list_new_mle.get(0).getLineName());
+
+            }
+
+        }
+
+
         for (MapLineEntity lineEntity : tempLineEntityList) {
             //添加新点位
             if (lineEntity == null) {
@@ -890,6 +902,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
             addMapPolylineCenterText(startLatlong, endLatlong, text);
         }
     }
+
+
     /**
      * 根据线的个数和新旧显示不同的颜色
      **/
@@ -1158,8 +1172,13 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
             }
             case Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD_C: {//修改线时替换信息
                 Log.d("KO", "开放的接口 "+15);
-
-                batchAddConnectWireHelper.handlerBatchAddLine(this, lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this));
+                list_new_mle.clear();
+                list_new_mle.addAll(batchAddConnectWireHelper.handlerBatchAddLine(this, lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this), list_mle));
+                for (MapLineEntity l : list_new_mle) {
+                    Log.d("KO", list_new_mle.size() + "大三大四1");
+                    Log.d("KO", l.getLineName() + "发生1");
+                    //lineEntity.setLineName("尼玛丑爆你");
+                }
                 Log.d("KO", "大河未过");
                 break;
             }

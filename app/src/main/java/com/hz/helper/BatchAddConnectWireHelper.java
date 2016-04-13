@@ -155,37 +155,22 @@ public class BatchAddConnectWireHelper {
         }
     }
 
-    public void handlerBatchAddLine(Context context, MapLineEntity lineEntity, long currentProjectId, long userId, ArrayList<MapLineEntity> list) {
+    public ArrayList<MapLineEntity> handlerBatchAddLine(Context context, MapLineEntity lineEntity, long currentProjectId, long userId, ArrayList<MapLineEntity> list) {
 
-        Log.d("KO", "也许花朵也灭的话");
-
-        for (MapLineEntity entity:
-             list) {
-            entity = lineEntity;
+        for (int i = 0; i < list.size(); i++) {
+            MapLineEntity entity = lineEntity;
+            /*list.remove(i);
+            list.add(entity);*/
+            list.set(i, entity);
+            Log.d("KO", "接近真相"+entity.getLineName()+" "+list.get(i).getLineName());
+            handlerBatchAddLineItem(entity, currentProjectId, userId);
         }
 
-        markerIds = getMarkerIds();
-
-        if(markerIds.size()!=0) {
-            FileUtil.write(context, markerIds);
-
-        }else{
-            markerIds = FileUtil.read(context);
+        for (int i = 0; i < list.size(); i++) {
+            Log.d("KO", "认识真相"+list.get(i).getLineName());
         }
 
-        Log.d("KO", "我知道花开罚了"+markerIds.size());
-        String preId = null;
-        for (String id : markerIds) {
-            Log.d("KO", "markerIds: "+id);
-            if (preId != null) {
-                MapPoiEntity strartPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(id);
-                Log.d("KO", "sP"+strartPoint.getPointName());
-                MapPoiEntity endPoint = DataBaseManagerHelper.getInstance().getPointEntityByPointId(preId);
-                Log.d("KO", "eP"+endPoint.getPointName());
-                handlerBatchAddLineItem(strartPoint, endPoint, lineEntity, currentProjectId, userId);
-            }
-            preId = id;
-        }
+        return list;
     }
 
     public void handlerBatchAddLine(MapLineEntity lineEntity, long currentProjectId, long userId) {
@@ -235,6 +220,48 @@ public class BatchAddConnectWireHelper {
             mapLineEntity.setLineEndLongitude(endPoint.getPointLongitude());
             mapLineEntity.setLineEndPointId(endPoint.getPointId());
             mapLineEntity.setLineEndPointName(endPoint.getPointName());
+
+            ArrayList<MapLineItemEntity> mapLineItemEntities = new ArrayList<>();
+            mapLineItemEntities.addAll(editLineEntity.getMapLineItemEntityList());
+            mapLineEntity.setMapLineItemEntityList(mapLineItemEntities);
+        } else {
+            if (mapLineEntity.getMapLineItemEntityList() == null) {
+                mapLineEntity.setMapLineItemEntityList(new ArrayList<MapLineItemEntity>());
+            } else {
+                for (MapLineItemEntity mapLineItemEntity : mapLineEntity.getMapLineItemEntityList()) {
+                    mapLineItemEntity.setLineItemRemoved(Constans.RemoveIdentified.REMOVE_IDENTIFIED_REMOVED);
+                }
+            }
+            mapLineEntity.getMapLineItemEntityList().addAll(editLineEntity.getMapLineItemEntityList());
+        }
+
+        mapLineEntity.setLineType(Constans.MapAttributeType.WIRE_ELECTRIC_CABLE);
+        mapLineEntity.setLineRemoved(Constans.RemoveIdentified.REMOVE_IDENTIFIED_NORMAL);
+        mapLineEntity.setLineName(editLineEntity.getLineName());
+        mapLineEntity.setLineNote(editLineEntity.getLineNote());
+        mapLineEntity.setLineSpecificationNumber(editLineEntity.getLineSpecificationNumber());
+
+
+        LatLng startLatlong = new LatLng(mapLineEntity.getLineStartLatitude(), mapLineEntity.getLineStartLongitude());
+        LatLng endLatlong = new LatLng(mapLineEntity.getLineEndLatitude(), mapLineEntity.getLineEndLongitude());
+        mapLineEntity.setLineLength(DistanceUtil.getDistance(startLatlong, endLatlong));
+
+        DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(mapLineEntity);
+    }
+
+    private void handlerBatchAddLineItem(MapLineEntity editLineEntity, long currentProjectId, long userId) {
+        //1.为批量新增的连线中的所有线段重新商城ID防止ID重复插入失效
+        for (MapLineItemEntity lineItem : editLineEntity.getMapLineItemEntityList()) {
+            lineItem.setLineItemId(UUID.randomUUID().toString());
+        }
+
+        //2.获取两个点之间的已有连线，如果有连线用批量的输入值覆盖已有的数据，如果没有新增连线
+        MapLineEntity mapLineEntity =  editLineEntity;
+        if (mapLineEntity == null) {
+            mapLineEntity = new MapLineEntity();
+            mapLineEntity.setLineProjId(currentProjectId);
+            mapLineEntity.setLineUserId(userId);
+            mapLineEntity.setLineId(UUID.randomUUID().toString());//设置线唯一ID
 
             ArrayList<MapLineItemEntity> mapLineItemEntities = new ArrayList<>();
             mapLineItemEntities.addAll(editLineEntity.getMapLineItemEntityList());
