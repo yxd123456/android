@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.hz.MainApplication;
 import com.hz.debug.hv.ViewServer;
@@ -15,6 +16,8 @@ import com.hz.greendao.dao.DaoSession;
 import com.hz.util.PackageUtil;
 import com.hz.util.WindowsUtil;
 import com.umeng.analytics.MobclickAgent;
+
+import java.util.ArrayList;
 
 /**
  * activity 基类
@@ -24,6 +27,8 @@ public class BaseActivity extends AppCompatActivity {
     public static final String TAG = BaseActivity.class.getSimpleName();
     public boolean useTranslucentStatusAndNavigation = false;//设置是否使用导航栏透明显示,设置此属性必须在super.onCreate()方法之前
     private Toolbar mMDToolBar;//Material Design 全局工具条
+    public static ArrayList<String> list_id = new ArrayList<>();
+    private int num = 0;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
@@ -69,6 +74,29 @@ public class BaseActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+    public void point(){
+        Log.d("Point", (num++)+"");
+    }
+
+    public void addId(String str){
+        list_id.add(str);
+    }
+
+    public void removeAll(){
+        list_id.clear();
+    }
+
+    public String random(){
+        return ((int)(Math.random()*10))+((int)(Math.random()*100))+((int)(Math.random()*1000))+"";
+    }
+
+    public void log(String tag,String str){
+        Log.d(tag, str);
+    }
+    public void toast(String str){
+        Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+    }
     /**
      * 将object转换为string
      * *

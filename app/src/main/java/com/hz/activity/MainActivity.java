@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.Log;
 import android.view.Gravity;
@@ -29,6 +30,7 @@ import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.DistanceUtil;
 import com.hz.R;
+import com.hz.activity.base.BaseActivity;
 import com.hz.activity.base.BaseMapActivity;
 import com.hz.common.Constans;
 import com.hz.fragment.ProjectListFragment;
@@ -45,6 +47,7 @@ import com.hz.helper.FoundConnectPointsHelper;
 import com.hz.helper.MapIconHelper;
 import com.hz.helper.SharedPreferencesHelper;
 import com.hz.sensor.listener.OrientationEventListener;
+import com.hz.util.SharedPreferencesUtils;
 import com.hz.view.PopupToast;
 
 import java.io.Serializable;
@@ -118,6 +121,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     private boolean flag_change = false;
     private ArrayList<MapLineEntity> list_new_mle = new ArrayList<>();
 
+    public static boolean FLAG_DELETE_SELECT = false;
+
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override//-->initComponents();
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,6 +154,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     protected void onActivityResult(final int requestCode, int resultCode, final Intent data) {
         Log.d("Do", "onActivityResult");
         postToShowProgressHudWidthText("更新地图元素中...");
+
         dataHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -156,11 +162,14 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 switch (requestCode) {
                     case Constans.RequestCode.POINT_ATTRIBUTE_EDIT_REQUESTCODE://点位信息编辑返回标志
                         //更新点位信息
+                        point();
                         handlerPointEditResult(data);
                         break;
                     case Constans.RequestCode.LINE_ATTRIBUTE_EDIT_REQUESTCODE:
                         //更新拉线信息
+
                         handlerLineEditResult(data);
+
                         break;
                 }
                 //清除地图上所有的overLay
@@ -169,7 +178,12 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 addMapPointMarkers(currentProjectId);
                 //重新在地图上打上线信息
                 addMapLines();
+                if(flag_change){
+                    flag_change = false;
 
+                    //list_new_mle.clear();
+
+                }
                 uiHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -178,6 +192,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                         postToRemoveProgressHud();
                     }
                 });
+
+
             }
         });
     }
@@ -208,12 +224,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         switch (v.getId()) {
             case R.id.id_btn_change_all:
                 if(!flag_change){
-                    Toast.makeText(this, "开启批量修改", Toast.LENGTH_SHORT).show();
-                    startToBatchConnectLine();
                     flag_change = true;
-                }else{
-                    Toast.makeText(this, "关闭批量修改", Toast.LENGTH_SHORT).show();
-                    flag_change = false;
+                    startToBatchConnectLine();
                 }
 
                 break;
@@ -304,17 +316,14 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 break;
             case R.id.id_button_addcancel3://连线取消
                 Log.d("Do", "id_button_addcancel3");
-
                 addCancel();
                 break;
             case R.id.id_button_addcancel4://批量连线取消
                 Log.d("Do", "id_button_addcancel4");
-
                 addCancel();
                 break;
             case R.id.id_button_addcancel5://批量修改点位信息取消
                 Log.d("Do", "id_button_addcancel5");
-
                 addCancel();
                 break;
             case R.id.id_ImageView_maptype://地图类型切换
@@ -554,26 +563,33 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         Log.d("Do", "onPolylineClick");
 
         MapLineEntity entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
+
+
         Log.d("KO", "惊喜"+entity.getLineName());
-        list_mle.add(entity);
         if(flag_change){
             // TODO: 2016/4/13
+            //String id = random();
+            //entity.setLineId(id);
+            list_mle.add(entity);
             polyline.setColor(Color.RED);
             list_polyline.add(polyline);
-
+            /*String id = random();
+            entity.setLineId(id);
+            list_mle.add(entity);*/
+            addId(entity.getLineId());
+            log("KO", "***********************************************************"+entity.getLineId());
             return true;
         }
 
         if(flag_delete){
-            assert entity != null;
             DataBaseManagerHelper.getInstance().removeLineByLineId(entity.getLineId());
+            toast(entity.getLineId());
             //清除地图上所有的overLay
             bdClear();
             //2.更新地图点位图标，点位拉线，点位bundle信息
             addMapPointMarkers(currentProjectId);
             //重新在地图上打上线信息
             addMapLines();
-
             uiHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -645,6 +661,12 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         isBatchLine = true;
         isBatchPoint = false;
         mEditLineBatchConnectBar.setVisibility(View.VISIBLE);
+        AppCompatButton btn = (AppCompatButton) mEditLineBatchConnectBar.findViewById(R.id.id_button_addcancel4);
+        if(flag_change){
+            btn.setText(R.string.giveup_change);
+        } else {
+            btn.setText(R.string.string_addcancel_batchline);
+        }
         mEditPointChooseBar.setVisibility(View.GONE);
         mLocationImaveView.setVisibility(View.GONE);
         mEditLineChooseBar.setVisibility(View.GONE);
@@ -740,6 +762,10 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
      * 编辑取消
      */
     private void addCancel() {
+        for (Polyline polyline : list_polyline){
+            polyline.setColor(Color.WHITE);
+        }
+        flag_change = false;
         clearMapOperateBar();
         MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLngZoom(getMapCenterLatLongFormScreen(), bdGetMaxZoomLevel() - 2);
         bdAnimateMapStatus(mapStatusUpdate);
@@ -865,14 +891,18 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
 
         if(list_new_mle != null&&list_new_mle.size()!=0) {
             for (MapLineEntity lineEntity : tempLineEntityList) {
-                Log.d("KO", list_new_mle.size() + "大三大四");
-                Log.d("KO", lineEntity.getLineName() + "发生");
-                lineEntity.setLineName(list_new_mle.get(0).getLineName());
+                log("KO", lineEntity.getLineId()+"********************************");
+                for (String id : BaseActivity.list_id){
+                    log("KO", id+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                   if(lineEntity.getLineId().equals(id)){// TODO: 2016/4/14
 
+                       String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
+                       log("KO", lineName+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                       lineEntity.setLineName(lineName);
+                   }
+               }
             }
-
         }
-
 
         for (MapLineEntity lineEntity : tempLineEntityList) {
             //添加新点位
@@ -1148,13 +1178,16 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
             return;
         }
         //MapLineEntity lineEntity = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
-        MapLineEntity lineEntity1 = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
-        MapLineEntity lineEntity = list_mle.get(0);
-        lineEntity = lineEntity1;
-        Log.d("KO", "爆炸和行为"+lineEntity.getLineName()+" "+lineEntity1.getLineName());
+        MapLineEntity lineEntity = null;
+        if(!flag_change){
+            lineEntity = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
+        } else {
+            lineEntity = list_mle.get(0);
+        }
         if (lineEntity == null) {
             return;
         }
+        toast("1");
         int editType = lineEntity.getLineEditType();
         Log.d("KO", "开放的接口 "+editType);
         switch (editType) {
@@ -1183,14 +1216,13 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_REMOVE: {//移除线
-                Log.d("KO", "开放的接口 "+3);
+                toast("lineEntity.getLineId()   "+lineEntity.getLineId());
                 DataBaseManagerHelper.getInstance().removeLineByLineId(lineEntity.getLineId());
-                Log.d("Do", "移除了线");
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD://批量添加点位返回
-                Log.d("KO", "开放的接口 "+4);
-                batchAddConnectWireHelper.handlerBatchAddLine(MainActivity.this, lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this));
+                Log.d("KO", "开放的接口 "+4);// TODO: 2016/4/14  
+                batchAddConnectWireHelper.handlerBatchAddLine(lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this));
                 break;
         }
     }

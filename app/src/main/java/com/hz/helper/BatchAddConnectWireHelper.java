@@ -128,9 +128,6 @@ public class BatchAddConnectWireHelper {
     public void handlerBatchAddLine(Context context, MapLineEntity lineEntity, long currentProjectId, long userId) {
 
         Log.d("KO", "也许花朵也灭的话");
-
-
-
         markerIds = getMarkerIds();
 
     /*    if(markerIds.size()!=0) {

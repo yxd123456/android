@@ -27,6 +27,7 @@ import com.hz.greendao.dao.MapLineItemEntity;
 import com.hz.greendao.dao.WireType;
 import com.hz.greendao.dao.WireTypeDao;
 import com.hz.entity.PickerItem;
+import com.hz.util.SharedPreferencesUtils;
 import com.hz.view.ValidaterEditText;
 
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import java.util.UUID;
 public class LineAttributeActivity extends BaseAttributeActivity {
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = LineAttributeActivity.class.getSimpleName();
+    public static final String LINE_NAME = "line_name";
     private MapLineEntity mapObj = null;
     private ValidaterEditText mEditWireType;//点位跨越线类型
     private ValidaterEditText mEditSpecificationNumber;//规格线数
@@ -91,7 +93,6 @@ public class LineAttributeActivity extends BaseAttributeActivity {
     @Override
     public void onBeforeRightIconClick() {
         mapObj.setLineEditType(Constans.AttributeEditType.EDIT_TYPE_REMOVE);
-        Toast.makeText(this,"dsdsdasd",Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -104,7 +105,7 @@ public class LineAttributeActivity extends BaseAttributeActivity {
         mapObj.setPointGalleryLists(mGalleryEntityList);*/
         mapObj.setLineWireTypeId(getString(mEditWireType.getTag()));
         mapObj.setLineName(mEditAttributeName.getText().toString());
-        Log.d("KO", mEditAttributeName.getText().toString());
+        SharedPreferencesUtils.setParam(this, LINE_NAME, mEditAttributeName.getText().toString());
         mapObj.setLineNote(mEditAttributeNote.getText().toString());
         mapObj.setLineRemoved(Constans.RemoveIdentified.REMOVE_IDENTIFIED_NORMAL);
         mapObj.setLineLength(Double.parseDouble(String.valueOf(mEditLineLength.getText().toString())));
