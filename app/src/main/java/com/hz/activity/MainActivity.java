@@ -125,7 +125,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
 
     public static boolean FLAG_DELETE_SELECT = false;
     //private List<MapLineEntity> tempLineEntityList;
-    private MapLineEntity entity;
+    //private MapLineEntity entity;
     private List<MapLineEntity> tempLineEntityList;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
@@ -168,39 +168,65 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                     case Constans.RequestCode.POINT_ATTRIBUTE_EDIT_REQUESTCODE://点位信息编辑返回标志
                         //更新点位信息
                         handlerPointEditResult(data);
+                        //清除地图上所有的overLay
+                        bdClear();
+                        //2.更新地图点位图标，点位拉线，点位bundle信息
+                        addMapPointMarkers(currentProjectId);
+                        //重新在地图上打上线信息
+                        // TODO: 2016/4/15
+
+                        addMapLines();
+
+                        if(flag_change){
+                            flag_change = false;
+                            BaseActivity.list_id.clear();
+                            list_new_mle.clear();
+                            list_polyline.clear();
+                            list_id.clear();
+                            tempLineEntityList.clear();
+                        }
+                        FLAG_DELETE_SELECT = false;
+                        uiHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                //重置地图操作栏
+                                clearMapOperateBar();
+                                postToRemoveProgressHud();
+                            }
+                        });
                         break;
                     case Constans.RequestCode.LINE_ATTRIBUTE_EDIT_REQUESTCODE:
                         //更新拉线信息
                         handlerLineEditResult(data);
+                        //清除地图上所有的overLay
+                        bdClear();
+                        //2.更新地图点位图标，点位拉线，点位bundle信息
+                        addMapPointMarkers(currentProjectId);
+                        //重新在地图上打上线信息
+                        // TODO: 2016/4/15
+
+                        addMapLines();
+
+                        if(flag_change){
+                            flag_change = false;
+                            BaseActivity.list_id.clear();
+                            list_new_mle.clear();
+                            list_polyline.clear();
+                            list_id.clear();
+                            tempLineEntityList.clear();
+                        }
+                        FLAG_DELETE_SELECT = false;
+                        uiHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                //重置地图操作栏
+                                clearMapOperateBar();
+                                postToRemoveProgressHud();
+                            }
+                        });
                         break;
                 }
-                //清除地图上所有的overLay
-                bdClear();
-                //2.更新地图点位图标，点位拉线，点位bundle信息
-                addMapPointMarkers(currentProjectId);
-                //重新在地图上打上线信息
-                // TODO: 2016/4/15
-                if(!FLAG_DELETE_SELECT){
-                    addMapLines();
-                }
-                if(flag_change){
-                    flag_change = false;
-                    BaseActivity.list_id.clear();
-                    list_new_mle.clear();
-                    list_polyline.clear();
-                    list_id.clear();
-                    SINGGLE_LINE_CLICK = false;
 
-
-                }
-                uiHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        //重置地图操作栏
-                        clearMapOperateBar();
-                        postToRemoveProgressHud();
-                    }
-                });
             }
         });
     }
@@ -571,7 +597,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     public boolean onPolylineClick(Polyline polyline) {
         Log.d("Do", "onPolylineClick");
 
-        entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
+        MapLineEntity entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
 
         if(flag_change){
             // TODO: 2016/4/13
@@ -588,10 +614,10 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
             list_mle.add(entity);*/
             log("KO", "tag初始化："+tag);
             return true;
-        } else {
+        } /*else {
             addId("test_id");
             SINGGLE_LINE_CLICK = true;
-        }
+        }*/
 
         if(flag_delete){
             DataBaseManagerHelper.getInstance().removeLineByLineId(entity.getLineId());
@@ -899,26 +925,13 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
      * 更新地图线信息
      */
     private void addMapLines() {
-        /*if ((tempLineEntityList == null&&!flag_change)||BaseActivity.list_id.size()==0) {
-            tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
-        } else {
-            for (MapLineEntity lineEntity : tempLineEntityList) {
-                log("KO", lineEntity.getTag()+"********************************");
-                for (String tag : BaseActivity.list_id){
-                    log("KO",tag+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                    if(lineEntity.getTag().equals(tag)){// TODO: 2016/4/14
-                        String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
-                        log("KO", lineName+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        lineEntity.setLineName(lineName);
-                    }
-                }
-            }
-        }*/
 
-       tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
-
-
+        tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
+        log("KO", "?3");
+        if(!FLAG_DELETE_SELECT) {
+            log("KO", "?1");
             if (list_new_mle != null && list_new_mle.size() != 0) {
+                log("KO", "?2");
                 for (MapLineEntity lineEntity : tempLineEntityList) {
                     log("KO", lineEntity.getLineId() + "********************************");
                     for (String tag : BaseActivity.list_id) {
@@ -927,7 +940,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                             String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
                             log("KO", lineName + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                             lineEntity.setLineName(lineName);
-                            if(flag_change){
+                            if (flag_change) {
                                 DataBaseManagerHelper.getInstance().removeLineByLineId(lineEntity.getLineId());
                             }
                             DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(lineEntity);
@@ -935,6 +948,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                     }
                 }
             }
+        }
 
 
         for (MapLineEntity lineEntity : tempLineEntityList) {
@@ -1244,7 +1258,6 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
             }
             case Constans.AttributeEditType.EDIT_TYPE_REMOVE_SELECT: {//移除线
                 log("KO", "计划B");
-
                     for (MapLineEntity line : tempLineEntityList) {
                         log("KO", line.getLineId()+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
                         for (String tag : BaseActivity.list_id){
