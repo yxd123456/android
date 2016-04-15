@@ -92,7 +92,9 @@ public class LineAttributeActivity extends BaseAttributeActivity {
     }
     @Override
     public void onBeforeRightIconClick() {
-        mapObj.setLineEditType(Constans.AttributeEditType.EDIT_TYPE_REMOVE);
+
+            mapObj.setLineEditType(Constans.AttributeEditType.EDIT_TYPE_REMOVE);
+
     }
 
     /**

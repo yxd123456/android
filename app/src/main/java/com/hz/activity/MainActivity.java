@@ -48,6 +48,7 @@ import com.hz.helper.MapIconHelper;
 import com.hz.helper.SharedPreferencesHelper;
 import com.hz.sensor.listener.OrientationEventListener;
 import com.hz.util.SharedPreferencesUtils;
+import com.hz.util.okhttp_extend.FileUtil;
 import com.hz.view.PopupToast;
 
 import java.io.Serializable;
@@ -63,6 +64,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     //线起始点控制
     public static final String LINE_START_KEY = "LINE_START_KEY";
     public static final String LINE_END_KEY = "LINE_END_KEY";
+    private static boolean SINGGLE_LINE_CLICK = false;
 
     private ArrayList<Polyline> list_polyline = new ArrayList<Polyline>();
     private ArrayList<MapLineEntity> list_mle = new ArrayList<MapLineEntity>();
@@ -122,6 +124,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     private ArrayList<MapLineEntity> list_new_mle = new ArrayList<>();
 
     public static boolean FLAG_DELETE_SELECT = false;
+    //private List<MapLineEntity> tempLineEntityList;
+    private MapLineEntity entity;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override//-->initComponents();
@@ -177,12 +181,16 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 //2.更新地图点位图标，点位拉线，点位bundle信息
                 addMapPointMarkers(currentProjectId);
                 //重新在地图上打上线信息
+
                 addMapLines();
+
                 if(flag_change){
                     flag_change = false;
-
-                    //list_new_mle.clear();
-
+                    BaseActivity.list_id.clear();
+                    list_new_mle.clear();
+                    list_polyline.clear();
+                    list_id.clear();
+                    SINGGLE_LINE_CLICK = false;
                 }
                 uiHandler.post(new Runnable() {
                     @Override
@@ -192,8 +200,6 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                         postToRemoveProgressHud();
                     }
                 });
-
-
             }
         });
     }
@@ -367,9 +373,11 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
 
                     list_mle.get(0).setLineEditType(Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD_C);
                     list_mle.get(0).setLineType(Constans.MapAttributeType.WIRE_ELECTRIC_CABLE);//导线.电缆
-
-                    //线条编辑属性
                     toEditLineAttributeActivity(list_mle.get(0));
+                   /* entity.getMapLineItemEntityList();
+                    entity.setLineEditType(Constans.AttributeEditType.EDIT_TYPE_EDIT);
+                    toEditLineAttributeActivity(entity);*/
+
                     return;
                 }
 
@@ -562,28 +570,30 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     public boolean onPolylineClick(Polyline polyline) {
         Log.d("Do", "onPolylineClick");
 
-        MapLineEntity entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
+        entity = (MapLineEntity) polyline.getExtraInfo().getSerializable(Constans.LINE_OBJ_KEY);
 
-
-        Log.d("KO", "惊喜"+entity.getLineName());
         if(flag_change){
             // TODO: 2016/4/13
-            //String id = random();
-            //entity.setLineId(id);
+            String tag = random();
+            DataBaseManagerHelper.getInstance().removeLineByLineId(entity.getLineId());
+            entity.setLineId(tag);
+            DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(entity);
             list_mle.add(entity);
+            addId(entity.getLineId());
             polyline.setColor(Color.RED);
             list_polyline.add(polyline);
             /*String id = random();
             entity.setLineId(id);
             list_mle.add(entity);*/
-            addId(entity.getLineId());
-            log("KO", "***********************************************************"+entity.getLineId());
+            log("KO", "tag初始化："+tag);
             return true;
+        } else {
+            addId("test_id");
+            SINGGLE_LINE_CLICK = true;
         }
 
         if(flag_delete){
             DataBaseManagerHelper.getInstance().removeLineByLineId(entity.getLineId());
-            toast(entity.getLineId());
             //清除地图上所有的overLay
             bdClear();
             //2.更新地图点位图标，点位拉线，点位bundle信息
@@ -883,22 +893,39 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
 
         toEditLineAttributeActivity(mapLineEntity);
     }
+
     /**
      * 更新地图线信息
      */
     private void addMapLines() {
+        /*if ((tempLineEntityList == null&&!flag_change)||BaseActivity.list_id.size()==0) {
+            tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
+        } else {
+            for (MapLineEntity lineEntity : tempLineEntityList) {
+                log("KO", lineEntity.getTag()+"********************************");
+                for (String tag : BaseActivity.list_id){
+                    log("KO",tag+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                    if(lineEntity.getTag().equals(tag)){// TODO: 2016/4/14
+                        String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
+                        log("KO", lineName+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        lineEntity.setLineName(lineName);
+                    }
+                }
+            }
+        }*/
+
         List<MapLineEntity> tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
 
-        if(list_new_mle != null&&list_new_mle.size()!=0) {
+       if(list_new_mle != null&&list_new_mle.size()!=0) {
             for (MapLineEntity lineEntity : tempLineEntityList) {
                 log("KO", lineEntity.getLineId()+"********************************");
-                for (String id : BaseActivity.list_id){
-                    log("KO", id+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                   if(lineEntity.getLineId().equals(id)){// TODO: 2016/4/14
-
+                for (String tag : BaseActivity.list_id){
+                    log("KO",tag+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                   if(lineEntity.getLineId().equals(tag)){// TODO: 2016/4/14
                        String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
                        log("KO", lineName+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                        lineEntity.setLineName(lineName);
+                       DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(lineEntity);
                    }
                }
             }
@@ -918,13 +945,11 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 case Constans.MapAttributeType.CROSS_LINE://跨越线
                     color = Color.BLUE;
                     text = DataBaseManagerHelper.getInstance().getLineWireTypeNameById(lineEntity.getLineWireTypeId());
-                    Log.d("KO", "关键线索1"+text);
                     addCrossLinePoints(lineEntity);
                     break;
                 case Constans.MapAttributeType.WIRE_ELECTRIC_CABLE://导线电缆
                     color = convertLineColorByLineItems(lineEntity.getMapLineItemEntityList());
                     text = Constans.DECIMALFORMAT_M.format(DistanceUtil.getDistance(startLatlong, endLatlong));
-                    Log.d("KO", "关键线索2"+text);
                     break;
             }
 
@@ -1204,15 +1229,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD_C: {//修改线时替换信息
-                Log.d("KO", "开放的接口 "+15);
                 list_new_mle.clear();
                 list_new_mle.addAll(batchAddConnectWireHelper.handlerBatchAddLine(this, lineEntity, currentProjectId, SharedPreferencesHelper.getUserId(this), list_mle));
-                for (MapLineEntity l : list_new_mle) {
-                    Log.d("KO", list_new_mle.size() + "大三大四1");
-                    Log.d("KO", l.getLineName() + "发生1");
-                    //lineEntity.setLineName("尼玛丑爆你");
-                }
-                Log.d("KO", "大河未过");
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_REMOVE: {//移除线

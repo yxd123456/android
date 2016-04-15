@@ -328,6 +328,7 @@ public abstract class BaseMapActivity extends BaseActivity implements BaiduMap.O
         }
         mBaiduMap.setMyLocationEnabled(enable);
     }
+
     /**
      * 更新地图上采集的点位信息
      * 包括 立杆,变压箱，户表，电缆井，箱式开关站，开闭所，箱式变压站

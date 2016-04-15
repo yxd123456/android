@@ -13,9 +13,21 @@ import de.greenrobot.dao.DaoException;
  */
 public class MapLineEntity implements java.io.Serializable {
 
+    public String getTag() {
+        if(tag == null){
+            return "";
+        }
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
     /**
      * Not-null value.
      */
+    private String tag;
     private String lineId;
     private long lineProjId;
     private long lineUserId;

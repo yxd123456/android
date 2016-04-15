@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class FileUtil {
 
-    public static void write(Context context, ArrayList<String> list){
+    public static void write(Context context, List list){
         ObjectOutputStream oos = null;
       try {
           FileOutputStream fileOutputStream = context.openFileOutput("xxx", context.MODE_PRIVATE);
@@ -37,13 +37,13 @@ public class FileUtil {
       }
   }
 
-  public static ArrayList<String> read(Context context){
+  public static List read(Context context){
       ObjectInputStream ois = null;
-      ArrayList<String> list = null;
+      List list = null;
       try {
           FileInputStream fileInputStream = context.openFileInput("xxx");
           ois = new ObjectInputStream(fileInputStream);
-          list = (ArrayList<String>) ois.readObject();
+          list = (List) ois.readObject();
       } catch (FileNotFoundException e) {
           e.printStackTrace();
       } catch (StreamCorruptedException e) {
