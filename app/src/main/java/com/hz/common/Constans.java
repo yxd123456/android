@@ -94,6 +94,7 @@ public class Constans {
         public static final int EDIT_TYPE_LINE_BATCHADD = 3;//批量新增线编辑类型
         public static final int EDIT_TYPE_POINT_BATCHUPDATE = 4;//批量修改点位编辑类型
         public static final int EDIT_TYPE_LINE_BATCHADD_C = 15;
+        public static final int EDIT_TYPE_REMOVE_SELECT = 172;
     }
 
     /**

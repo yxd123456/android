@@ -120,12 +120,13 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
     private Button btn_change_all;
 
     private boolean flag_delete = false;
-    private boolean flag_change = false;
+    public static boolean flag_change = false;
     private ArrayList<MapLineEntity> list_new_mle = new ArrayList<>();
 
     public static boolean FLAG_DELETE_SELECT = false;
     //private List<MapLineEntity> tempLineEntityList;
     private MapLineEntity entity;
+    private List<MapLineEntity> tempLineEntityList;
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override//-->initComponents();
@@ -166,14 +167,11 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 switch (requestCode) {
                     case Constans.RequestCode.POINT_ATTRIBUTE_EDIT_REQUESTCODE://点位信息编辑返回标志
                         //更新点位信息
-                        point();
                         handlerPointEditResult(data);
                         break;
                     case Constans.RequestCode.LINE_ATTRIBUTE_EDIT_REQUESTCODE:
                         //更新拉线信息
-
                         handlerLineEditResult(data);
-
                         break;
                 }
                 //清除地图上所有的overLay
@@ -181,9 +179,10 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 //2.更新地图点位图标，点位拉线，点位bundle信息
                 addMapPointMarkers(currentProjectId);
                 //重新在地图上打上线信息
-
-                addMapLines();
-
+                // TODO: 2016/4/15
+                if(!FLAG_DELETE_SELECT){
+                    addMapLines();
+                }
                 if(flag_change){
                     flag_change = false;
                     BaseActivity.list_id.clear();
@@ -191,6 +190,8 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                     list_polyline.clear();
                     list_id.clear();
                     SINGGLE_LINE_CLICK = false;
+
+
                 }
                 uiHandler.post(new Runnable() {
                     @Override
@@ -914,22 +915,27 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
             }
         }*/
 
-        List<MapLineEntity> tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
+       tempLineEntityList = DataBaseManagerHelper.getInstance().getAlllinesByProjectId(currentProjectId);
 
-       if(list_new_mle != null&&list_new_mle.size()!=0) {
-            for (MapLineEntity lineEntity : tempLineEntityList) {
-                log("KO", lineEntity.getLineId()+"********************************");
-                for (String tag : BaseActivity.list_id){
-                    log("KO",tag+"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                   if(lineEntity.getLineId().equals(tag)){// TODO: 2016/4/14
-                       String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
-                       log("KO", lineName+"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                       lineEntity.setLineName(lineName);
-                       DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(lineEntity);
-                   }
-               }
+
+            if (list_new_mle != null && list_new_mle.size() != 0) {
+                for (MapLineEntity lineEntity : tempLineEntityList) {
+                    log("KO", lineEntity.getLineId() + "********************************");
+                    for (String tag : BaseActivity.list_id) {
+                        log("KO", tag + "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                        if (lineEntity.getLineId().equals(tag)) {// TODO: 2016/4/14
+                            String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
+                            log("KO", lineName + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            lineEntity.setLineName(lineName);
+                            if(flag_change){
+                                DataBaseManagerHelper.getInstance().removeLineByLineId(lineEntity.getLineId());
+                            }
+                            DataBaseManagerHelper.getInstance().addOrUpdateOneLineToDb(lineEntity);
+                        }
+                    }
+                }
             }
-        }
+
 
         for (MapLineEntity lineEntity : tempLineEntityList) {
             //添加新点位
@@ -1204,7 +1210,7 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         }
         //MapLineEntity lineEntity = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
         MapLineEntity lineEntity = null;
-        if(!flag_change){
+        if(!flag_change||FLAG_DELETE_SELECT){
             lineEntity = (MapLineEntity) data.getExtras().getSerializable(Constans.LINE_OBJ_KEY);
         } else {
             lineEntity = list_mle.get(0);
@@ -1212,7 +1218,6 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         if (lineEntity == null) {
             return;
         }
-        toast("1");
         int editType = lineEntity.getLineEditType();
         Log.d("KO", "开放的接口 "+editType);
         switch (editType) {
@@ -1234,8 +1239,23 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_REMOVE: {//移除线
-                toast("lineEntity.getLineId()   "+lineEntity.getLineId());
                 DataBaseManagerHelper.getInstance().removeLineByLineId(lineEntity.getLineId());
+                break;
+            }
+            case Constans.AttributeEditType.EDIT_TYPE_REMOVE_SELECT: {//移除线
+                log("KO", "计划B");
+
+                    for (MapLineEntity line : tempLineEntityList) {
+                        log("KO", line.getLineId()+"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
+                        for (String tag : BaseActivity.list_id){
+                            log("KO", tag + "***************************");
+                            if(line.getLineId().equals(tag)){
+                                DataBaseManagerHelper.getInstance().removeLineByLineId(line.getLineId());
+                                log("KO", "计划C");
+                            }
+                        }
+                    }
+
                 break;
             }
             case Constans.AttributeEditType.EDIT_TYPE_LINE_BATCHADD://批量添加点位返回
