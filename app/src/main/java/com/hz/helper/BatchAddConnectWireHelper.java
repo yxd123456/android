@@ -121,7 +121,6 @@ public class BatchAddConnectWireHelper {
         }
         return pointIds;
     }
-
     /**
      * 批量增加导线/电缆
      **/

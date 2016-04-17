@@ -94,6 +94,12 @@ public class BaseActivity extends AppCompatActivity {
     public void log(String tag,String str){
         Log.d(tag, str);
     }
+    public void log(String str){
+        if(str == null){
+            Log.d("KO", "空值");
+        }
+        Log.d("KO", str);
+    }
     public void toast(String str){
         Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
     }

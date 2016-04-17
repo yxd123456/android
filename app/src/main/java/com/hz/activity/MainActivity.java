@@ -48,7 +48,6 @@ import com.hz.helper.MapIconHelper;
 import com.hz.helper.SharedPreferencesHelper;
 import com.hz.sensor.listener.OrientationEventListener;
 import com.hz.util.SharedPreferencesUtils;
-import com.hz.util.okhttp_extend.FileUtil;
 import com.hz.view.PopupToast;
 
 import java.io.Serializable;
@@ -591,8 +590,6 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
         });
     }
 
-
-
     @Override
     public boolean onPolylineClick(Polyline polyline) {
         Log.d("Do", "onPolylineClick");
@@ -936,9 +933,13 @@ public class MainActivity extends BaseMapActivity implements View.OnClickListene
                     log("KO", lineEntity.getLineId() + "********************************");
                     for (String tag : BaseActivity.list_id) {
                         log("KO", tag + "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                        if (lineEntity.getLineId().equals(tag)) {// TODO: 2016/4/14
+                        if (lineEntity.getLineId().equals(tag)) {// TODO: 修改所选线条的信息
                             String lineName = (String) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.LINE_NAME, list_new_mle.get(0).getLineName());
                             log("KO", lineName + "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                            // TODO: 更新规格线数
+                            int Line_Specification_Number = (int) SharedPreferencesUtils.getParam(MainActivity.this, LineAttributeActivity.Line_Specification_Number, list_new_mle.get(0).getLineSpecificationNumber());
+                            log("dddddddddddddddd"+Line_Specification_Number);
+                            lineEntity.setLineSpecificationNumber(Line_Specification_Number);
                             lineEntity.setLineName(lineName);
                             if (flag_change) {
                                 DataBaseManagerHelper.getInstance().removeLineByLineId(lineEntity.getLineId());

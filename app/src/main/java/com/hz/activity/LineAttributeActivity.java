@@ -41,12 +41,17 @@ public class LineAttributeActivity extends BaseAttributeActivity {
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     public static final String TAG = LineAttributeActivity.class.getSimpleName();
     public static final String LINE_NAME = "line_name";
+    public static final String LINE_WIRE_TYPEID = "line_wire_typeid";
     private MapLineEntity mapObj = null;
     private ValidaterEditText mEditWireType;//点位跨越线类型
     private ValidaterEditText mEditSpecificationNumber;//规格线数
     private TextView mEditLineLength;//导线/电缆长度
     private TableLayout mEditElectricCableTableLayout;//导线/电缆 属性
     private ArrayList<MapLineEntity> list_mapObj;
+    public static final String Line_Removed = "Line_Removed";
+    public static final String Edit_Attribute_Note = "Edit_Attribute_Note";
+    public static final String Line_Length = "Line_Length";
+    public static final String Line_Specification_Number = "Line_Specification_Number";
 
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     @Override
@@ -110,14 +115,36 @@ public class LineAttributeActivity extends BaseAttributeActivity {
         //移除默认图片
        /* mGalleryEntityList.remove(mGalleryEntityList.size() - 1);
         mapObj.setPointGalleryLists(mGalleryEntityList);*/
+        // TODO: 点击确定按钮将数据保存到本地
+        log("1");
         mapObj.setLineWireTypeId(getString(mEditWireType.getTag()));
-        mapObj.setLineName(mEditAttributeName.getText().toString());
-        SharedPreferencesUtils.setParam(this, LINE_NAME, mEditAttributeName.getText().toString());
-        mapObj.setLineNote(mEditAttributeNote.getText().toString());
-        mapObj.setLineRemoved(Constans.RemoveIdentified.REMOVE_IDENTIFIED_NORMAL);
-        mapObj.setLineLength(Double.parseDouble(String.valueOf(mEditLineLength.getText().toString())));
-        mapObj.setLineSpecificationNumber(Integer.parseInt(mEditSpecificationNumber.getText().toString()));
+        if(getString(mEditWireType.getTag()) != null){
+            SharedPreferencesUtils.setParam(this, LINE_WIRE_TYPEID, getString(mEditWireType.getTag()));
+        }
 
+        log("2");
+        mapObj.setLineName(mEditAttributeName.getText().toString());
+        if(mEditAttributeName.getText().toString()!=null){
+            SharedPreferencesUtils.setParam(this, LINE_NAME, mEditAttributeName.getText().toString());
+        }
+
+        log("3");
+        mapObj.setLineNote(mEditAttributeNote.getText().toString());
+        if(mEditAttributeNote.getText().toString() != null){
+            SharedPreferencesUtils.setParam(this, Edit_Attribute_Note, mEditAttributeNote.getText().toString());
+        }
+
+        log("4");
+        mapObj.setLineRemoved(Constans.RemoveIdentified.REMOVE_IDENTIFIED_NORMAL);
+        SharedPreferencesUtils.setParam(this, Line_Removed, Constans.RemoveIdentified.REMOVE_IDENTIFIED_NORMAL);
+        log("5");
+        mapObj.setLineLength(Double.parseDouble(String.valueOf(mEditLineLength.getText().toString())));
+
+        SharedPreferencesUtils.setParam(this, Line_Length, Float.parseFloat(String.valueOf(mEditLineLength.getText().toString())));
+        log("6");
+        mapObj.setLineSpecificationNumber(Integer.parseInt(mEditSpecificationNumber.getText().toString()));
+        SharedPreferencesUtils.setParam(this, Line_Specification_Number, Integer.parseInt(mEditSpecificationNumber.getText().toString()));
+        log("7");
         List<MapLineItemEntity> lineItemEntityList = new ArrayList<>();
         for (TableRow tableRow : findElectricCableTableLayoutChildTableRow()) {
             ValidaterEditText electricCable = (ValidaterEditText) tableRow.findViewById(R.id.id_edit_electriccable_itemmode);
@@ -235,7 +262,7 @@ public class LineAttributeActivity extends BaseAttributeActivity {
         super.onClick(v);
         switch (v.getId()) {
             case R.id.id_button_addtablerow://添加一行
-                TableRow tableRow = createNewTableRow();
+                TableRow tableRow = createNewTableRow();// TODO: 添加一行 
                 addNewTableRowToTableLayout(tableRow);
                 break;
         }
